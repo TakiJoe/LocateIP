@@ -22,7 +22,7 @@ typedef struct
 typedef struct
 {
 	uint32_t			count;
-	loCiTime			time;
+	LoCiTime			time;
 } LoCiInfo;
 
 typedef struct

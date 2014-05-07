@@ -3,7 +3,6 @@
 
 int main()
 {
-    printf("%d", GetDateIndex(2014,5,5));
-    getchar();
+    printf("%d", GetVersion(2014,5,5));
     return 0;
 }
