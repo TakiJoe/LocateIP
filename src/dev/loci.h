@@ -20,6 +20,7 @@ typedef unsigned uint32_t;
 
 typedef struct loci_t loci;
 typedef struct loci_iter_t loci_iter;
+typedef struct loci_item_t loci_item;
 
 struct loci_t
 {
@@ -27,14 +28,18 @@ struct loci_t
 	uint32_t            length;
 	uint32_t			count;
 	uint32_t			date;
-	bool                (*iter)(loci_iter *);
-	bool                (*find)(loci_iter *, uint32_t);
+	bool                (*iter)(const loci *, loci_item *, uint32_t);
+	bool                (*find)(const loci *, loci_item *, uint32_t);
 };
 
 struct loci_iter_t
 {
-    loci*               ctx;
+    const loci*         ctx;
     uint32_t            index;
+};
+
+struct loci_item_t
+{
 	const char*			zone;
 	const char*			area;
 	uint32_t			lower;
@@ -42,14 +47,11 @@ struct loci_iter_t
 };
 
 loci* loci_create();
-bool loci_dump(loci *, const char *);
 void loci_release(loci *);
 
-loci_iter* loci_iter_create(loci *);
-bool loci_iter_next(loci_iter *);
-void loci_iter_release(loci_iter *);
-
-uint32_t loci_iter_index(const loci_iter *);
+bool loci_dump(const loci *, const char *);
+bool loci_iterator(loci_iter *, loci_item *);
+bool loci_find(const loci *, loci_item *, const char *);
 
 #ifdef __cplusplus
 }

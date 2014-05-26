@@ -44,7 +44,20 @@ int main()
     loci *qqwry = qqwry_create(buffer, length);
     printf("%d\n", qqwry->count);
 
-    loci_dump(qqwry, "1.txt");
+    //loci_dump(qqwry, "1.txt");
+
+    loci_item item;
+    loci_find(qqwry, &item, "182.151.91.201");
+
+    char ip1[16];
+    char ip2[16];
+
+    char *ip1_t = ip2str(ip1, sizeof(ip1), item.lower);
+    char *ip2_t = ip2str(ip2, sizeof(ip2), item.upper);
+    printf("%-16s%-16s%s%s%s\r\n", ip1_t, ip2_t, item.zone, strlen(item.area)>0?" ":"", item.area);
+
+    free(buffer);
+    loci_release(qqwry);
     //getchar();
     return 0;
 }

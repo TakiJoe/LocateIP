@@ -5,17 +5,17 @@ inline static uint32_t get_3b(const char *mem)
     return 0x00ffffff & *(uint32_t*)(mem);
 }
 
-static bool qqwry_iter(loci_iter *iter)
+static bool qqwry_iter(const loci *ctx, loci_item *item, uint32_t index)
 {
-    if(iter->index<iter->ctx->count)
+    if(index<ctx->count)
     {
-        char *ptr = (char*)iter->ctx->buffer;
+        char *ptr = (char*)ctx->buffer;
         char *p = ptr + *(uint32_t*)ptr;
 
-        uint32_t temp = get_3b(p + 7 * iter->index + 4);
+        uint32_t temp = get_3b(p + 7 * index + 4);
 
-        iter->lower = *(uint32_t*)(p + 7 * iter->index);
-        iter->upper = *(uint32_t*)(ptr + temp);
+        item->lower = *(uint32_t*)(p + 7 * index);
+        item->upper = *(uint32_t*)(ptr + temp);
 
         char *offset = ptr + temp + 4;
 
@@ -25,27 +25,43 @@ static bool qqwry_iter(loci_iter *iter)
         // zone
         if( 0x02 == *offset )
         {
-            iter->zone = (const char *)( ptr + get_3b(offset + 1) );
+            item->zone = (const char *)( ptr + get_3b(offset + 1) );
             offset += 4;
         }
         else
         {
-            iter->zone = (const char *)offset;
+            item->zone = (const char *)offset;
             offset += strlen(offset) + 1;
         }
 
         // area
         if( 0x02 == *offset )
-            iter->area = (const char *)( ptr + get_3b(offset + 1) );
+            item->area = (const char *)( ptr + get_3b(offset + 1) );
         else
-            iter->area = (const char *)offset;
+            item->area = (const char *)offset;
+        return true;
     }
     return false;
 }
 
-static bool qqwry_find(loci_iter *iter)
+static bool qqwry_find(const loci *ctx, loci_item *item, uint32_t ip)
 {
-    return true;
+    char *ptr = (char*)ctx->buffer;
+    char *p = ptr + *(uint32_t*)ptr;
+
+    uint32_t low = 0;
+    uint32_t high = ctx->count;
+    while (1)
+    {
+        if( low >= high - 1 )
+            break;
+
+        if( ip < *(uint32_t*)(p + (low + high)/2 * 7) )
+            high = (low + high)/2;
+        else
+            low = (low + high)/2;
+    }
+    return qqwry_iter(ctx, item, low);
 }
 
 loci* qqwry_create(const uint8_t *buffer, uint32_t length)
@@ -54,6 +70,7 @@ loci* qqwry_create(const uint8_t *buffer, uint32_t length)
     ctx->buffer = buffer;
     ctx->length = length;
     ctx->iter = qqwry_iter;
+    ctx->find = qqwry_find;
 
     if(length>=8)
     {

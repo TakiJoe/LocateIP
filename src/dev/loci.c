@@ -1,6 +1,6 @@
 #include "loci.h"
 
-inline static char* ip2str(char *buf, size_t len, int ip)
+static char* ip2str(char *buf, size_t len, int ip)
 {
     buf[--len] = 0;
 
@@ -21,22 +21,57 @@ inline static char* ip2str(char *buf, size_t len, int ip)
     //sprintf(buf, "%d.%d.%d.%d", (uint8_t)(ip>>24), (uint8_t)(ip>>16), (uint8_t)(ip>>8), (uint8_t)ip);
 }
 
+static uint32_t str2ip(const char *lp)
+{
+    uint32_t ret = 0;
+    uint8_t now = 0;
+
+    while(*lp)
+    {
+        if('.' == *lp)
+        {
+            ret = 256 * ret + now;
+            now = 0;
+        }
+        else
+        {
+            now = 10 * now + *lp - '0';
+        }
+
+        ++lp;
+    }
+    ret = 256 * ret + now;
+
+    return ret;
+}
+
 loci* loci_create()
 {
     return calloc(1, sizeof(loci));
 }
 
-bool loci_dump(loci *ctx, const char *file)
+void loci_release(loci *ctx)
+{
+    free(ctx);
+}
+
+bool loci_dump(const loci *ctx, const char *file)
 {
     FILE *fp = fopen(file, "wb");
     if(fp)
     {
-        loci_iter* iter = loci_iter_create(ctx);
-        while(loci_iter_next(iter))
+        loci_iter iter;
+        iter.ctx = ctx;
+        iter.index = 0;
+        loci_item item;
+        while(loci_iterator(&iter, &item))
         {
             char ip1[16];
             char ip2[16];
-            fprintf(fp, "%-16s%-16s%s%s%s\r\n", ip2str(ip1, sizeof(ip1), iter->lower), ip2str(ip2, sizeof(ip2), iter->upper), iter->zone, strlen(iter->area)>0?" ":"", iter->area);
+
+            char *ip1_t = ip2str(ip1, sizeof(ip1), item.lower);
+            char *ip2_t = ip2str(ip2, sizeof(ip2), item.upper);
+            fprintf(fp, "%-16s%-16s%s%s%s\r\n", ip1_t, ip2_t, item.zone, strlen(item.area)>0?" ":"", item.area);
         }
 
         fprintf(fp, "\r\n\r\nIP数据库共有数据 ： %d 条\r\n", ctx->count);
@@ -46,36 +81,12 @@ bool loci_dump(loci *ctx, const char *file)
     return false;
 }
 
-void loci_release(loci *ctx)
+bool loci_iterator(loci_iter *iter, loci_item *item)
 {
-    free(ctx);
+    return iter->ctx->iter(iter->ctx, item, iter->index++);
 }
 
-loci_iter* loci_iter_create(loci *ctx)
+bool loci_find(const loci *ctx, loci_item *item, const char *ip)
 {
-    loci_iter* iter = calloc(1, sizeof(loci_iter));
-    iter->ctx = ctx;
-    iter->index = 0;
-    return iter;
-}
-
-bool loci_iter_next(loci_iter *iter)
-{
-    if(iter->index<iter->ctx->count)
-    {
-        iter->ctx->iter(iter);
-        iter->index++;
-        return true;
-    }
-    return false;
-}
-
-void loci_iter_release(loci_iter *iter)
-{
-    free(iter);
-}
-
-uint32_t loci_iter_index(const loci_iter *iter)
-{
-    return iter->index;
+    return ctx->find(ctx, item, str2ip(ip));
 }
