@@ -55,7 +55,7 @@ static bool mon17_find(const loci *ctx, loci_item *item, uint32_t ip)
     mon17_item *ptr = (mon17_item*)(ctx->buffer + 4 + 256*4);
     for(;offset<ctx->count;offset++)
     {
-        if( memcmp(&ptr[offset].upper, &_ip, 4)>0 )
+        if( memcmp(&ptr[offset].upper, &_ip, 4)>=0 )
         {
             break;
         }
