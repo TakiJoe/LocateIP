@@ -1,5 +1,7 @@
 #include "loci.h"
 
+// http://www.cz88.net/
+
 inline static uint32_t get_3b(const char *mem)
 {
     return 0x00ffffff & *(uint32_t*)(mem);
@@ -22,7 +24,6 @@ static bool qqwry_iter(const loci *ctx, loci_item *item, uint32_t index)
         if( 0x01 == *offset )
             offset = ptr + get_3b(offset + 1);
 
-        // zone
         if( 0x02 == *offset )
         {
             item->zone = (const char *)( ptr + get_3b(offset + 1) );
@@ -34,7 +35,6 @@ static bool qqwry_iter(const loci *ctx, loci_item *item, uint32_t index)
             offset += strlen(offset) + 1;
         }
 
-        // area
         if( 0x02 == *offset )
             item->area = (const char *)( ptr + get_3b(offset + 1) );
         else
@@ -85,7 +85,6 @@ loci* qqwry_create(const uint8_t *buffer, uint32_t length)
 
             loci_item item;
             qqwry_iter(ctx, &item, ctx->count-1);
-
             uint32_t year = 0, month = 0, day = 0;
             if( sscanf(item.area, "%d年%d月%d日", &year, &month, &day)!=3 ) // 纯真IP数据库
             {
@@ -94,7 +93,6 @@ loci* qqwry_create(const uint8_t *buffer, uint32_t length)
                     year = 1899, month = 12, day = 30; // 未知数据库
                 }
             }
-
             ctx->date = year*10000 + month*100 + day;
         }
         else

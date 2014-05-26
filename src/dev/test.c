@@ -3,6 +3,7 @@
 #include "cz_update.c"
 #include "loci.c"
 #include "qqwry.c"
+#include "mon17.c"
 
 //#include <windows.h>
 uint8_t* readfile(const char *path, uint32_t *length)
@@ -40,14 +41,14 @@ uint8_t* readfile(const char *path, uint32_t *length)
 int main()
 {
     uint32_t length = 0;
-    uint8_t *buffer = readfile("qqwry.dat", &length);
-    loci *qqwry = qqwry_create(buffer, length);
-    printf("%d %d\n", qqwry->count, qqwry->date);
+    uint8_t *buffer = readfile("17monipdb.dat", &length);
+    loci *ipdb = mon17_create(buffer, length);
+    printf("%d %d\n", ipdb->count, ipdb->date);
 
-    //loci_dump(qqwry, "1.txt");
+    loci_dump(ipdb, "1.txt");
 
     loci_item item;
-    loci_find(qqwry, &item, "112.121.182.84");
+    loci_find(ipdb, &item, "112.121.182.84");
 
     char ip1[16];
     char ip2[16];
@@ -57,7 +58,7 @@ int main()
     printf("%-16s%-16s%s%s%s\r\n", ip1_t, ip2_t, item.zone, strlen(item.area)>0?" ":"", item.area);
 
     free(buffer);
-    loci_release(qqwry);
+    loci_release(ipdb);
     //getchar();
     return 0;
 }
