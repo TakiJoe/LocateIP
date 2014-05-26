@@ -9,6 +9,8 @@ inline static uint32_t swap32(uint32_t n)
 {
     #ifdef __GNUC__
         return __builtin_bswap32(n);
+    #elif defined _MSC_VER
+        return _byteswap_ulong(n);
     #else
         //
     #endif // __GNUC__
