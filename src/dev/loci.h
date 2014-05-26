@@ -1,8 +1,14 @@
 #ifndef __LOCATION_H_
 #define __LOCATION_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
+#include <stdlib.h>
 
 // 基本结构定义
 
@@ -12,32 +18,41 @@ typedef unsigned short uint16_t;
 typedef unsigned uint32_t;
 #endif
 
-typedef struct
-{
-	uint16_t		year;
-	uint8_t			month;
-	uint8_t			day;
-} LoCiTime, *PLoCiTime;
+typedef struct loci_t loci;
+typedef struct loci_iter_t loci_iter;
 
-typedef struct
+struct loci_t
 {
+	const uint8_t*		buffer;
+	uint32_t            length;
 	uint32_t			count;
-	LoCiTime			time;
-} LoCiInfo;
+	uint32_t			date;
+	bool                (*iter)(loci_iter *);
+	bool                (*find)(loci_iter *, uint32_t);
+};
 
-typedef struct
+struct loci_iter_t
 {
+    loci*               ctx;
+    uint32_t            index;
 	const char*			zone;
 	const char*			area;
 	uint32_t			lower;
 	uint32_t			upper;
-} LoCiItem;
+};
 
-typedef struct
-{
-	const uint8_t*		buffer;
-	LoCiInfo			info;
-	LoCiItem			item;
-} *LoCi;
+loci* loci_create();
+bool loci_dump(loci *, const char *);
+void loci_release(loci *);
+
+loci_iter* loci_iter_create(loci *);
+bool loci_iter_next(loci_iter *);
+void loci_iter_release(loci_iter *);
+
+uint32_t loci_iter_index(const loci_iter *);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // __LOCATION_H_
