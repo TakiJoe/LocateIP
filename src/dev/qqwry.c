@@ -82,6 +82,20 @@ loci* qqwry_create(const uint8_t *buffer, uint32_t length)
         {
             ctx->count /= 7;
             ctx->count++;
+
+            loci_item item;
+            qqwry_iter(ctx, &item, ctx->count-1);
+
+            uint32_t year = 0, month = 0, day = 0;
+            if( sscanf(item.area, "%d年%d月%d日", &year, &month, &day)!=3 ) // 纯真IP数据库
+            {
+                if( sscanf(item.area, "%4d%2d%2d", &year, &month, &day)!=3 ) // 珊瑚虫IP数据库
+                {
+                    year = 1899, month = 12, day = 30; // 未知数据库
+                }
+            }
+
+            ctx->date = year*10000 + month*100 + day;
         }
         else
         {

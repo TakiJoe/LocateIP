@@ -42,12 +42,12 @@ int main()
     uint32_t length = 0;
     uint8_t *buffer = readfile("qqwry.dat", &length);
     loci *qqwry = qqwry_create(buffer, length);
-    printf("%d\n", qqwry->count);
+    printf("%d %d\n", qqwry->count, qqwry->date);
 
     //loci_dump(qqwry, "1.txt");
 
     loci_item item;
-    loci_find(qqwry, &item, "182.151.91.201");
+    loci_find(qqwry, &item, "112.121.182.84");
 
     char ip1[16];
     char ip2[16];
