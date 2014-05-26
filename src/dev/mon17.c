@@ -2,6 +2,9 @@
 
 // http://tool.17mon.cn/ipdb.html
 
+// 查询更新 http://api.17mon.cn/api.php?a=ipdb
+// 返回字符串 112.121.182.84|20140501|http://s.qdcdn.com/17mon/17monipdb.dat
+
 inline static uint32_t swap32(uint32_t n)
 {
     #ifdef __GNUC__
