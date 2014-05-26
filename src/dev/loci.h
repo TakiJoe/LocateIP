@@ -50,8 +50,8 @@ loci* loci_create();
 void loci_release(loci *);
 
 bool loci_dump(const loci *, const char *);
-bool loci_iterator(loci_iter *, loci_item *);
 bool loci_find(const loci *, loci_item *, const char *);
+bool loci_next(loci_iter *, loci_item *);
 
 #ifdef __cplusplus
 }

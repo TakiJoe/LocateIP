@@ -64,7 +64,7 @@ bool loci_dump(const loci *ctx, const char *file)
         iter.ctx = ctx;
         iter.index = 0;
         loci_item item;
-        while(loci_iterator(&iter, &item))
+        while(loci_next(&iter, &item))
         {
             char ip1[16];
             char ip2[16];
@@ -81,12 +81,12 @@ bool loci_dump(const loci *ctx, const char *file)
     return false;
 }
 
-bool loci_iterator(loci_iter *iter, loci_item *item)
-{
-    return iter->ctx->iter(iter->ctx, item, iter->index++);
-}
-
 bool loci_find(const loci *ctx, loci_item *item, const char *ip)
 {
     return ctx->find(ctx, item, str2ip(ip));
+}
+
+bool loci_next(loci_iter *iter, loci_item *item)
+{
+    return iter->ctx->iter(iter->ctx, item, iter->index++);
 }
