@@ -265,7 +265,7 @@ bool apply_patch(const ipdb *db, const uint8_t *buffer, uint32_t length, const c
 
         ipdb *proxy = ipdb_create(&proxy_handle, NULL, 0, &ctx);
         //qqwry_build(proxy, file);
-        ipdb_dump(proxy, "525 new.txt");
+        //ipdb_dump(proxy, "525 new.txt");
 
         ipdb_release(proxy);
     }

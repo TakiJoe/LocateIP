@@ -34,6 +34,7 @@ void my_free(void *ptr)
 #include "txtdb.c"
 #include "qqwry_build.c"
 #include "patch.c"
+#include "cz_update.c"
 
 //#include <windows.h>
 uint8_t* readfile(const char *path, uint32_t *length)
@@ -170,6 +171,29 @@ void test_apply_patch()
     if(buffer2) free(buffer2);
     ipdb_release(db1);
 }
+
+void test_cz_update()
+{
+    uint32_t length1 = 0;
+    uint32_t length2 = 0;
+    uint8_t *buffer1 = readfile("copywrite.rar", &length1);
+    uint8_t *buffer2 = readfile("qqwry.rar", &length2);
+
+    const cz_update *update = parse_cz_update(buffer1, length1);
+    if(update)
+    {
+        uint8_t *qqwry = decode_cz_update(update, buffer2, length2, &length1);
+        if(qqwry)
+        {
+            printf("qqwry %d\n", length1);
+            free(qqwry);
+        }
+        printf("%d\n", ToDate(update->version));
+    }
+
+    if(buffer1) free(buffer1);
+    if(buffer2) free(buffer2);
+}
 int main()
 {
     //test_table();
@@ -177,8 +201,10 @@ int main()
     //test_read_mon17();
     //test_build_qqwry();
     //test_build_patch();
-    test_apply_patch();
+    //test_apply_patch();
     //test_read_txt();
+    test_cz_update();
     printf("calloc_times:%d free_times:%d %d\n",calloc_times,free_times,calloc_times-free_times);
+    //getchar();
     return 0;
 }
