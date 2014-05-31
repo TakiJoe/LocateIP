@@ -81,8 +81,7 @@ bool make_patch(const ipdb *db1, const ipdb *db2)
     {
         db1->handle->iter(db1, &item1, i);
         db2->handle->iter(db2, &item2, j);
-        //printf("%d %d\n",i,j);
-        //getchar();
+
         if(item1.lower!=item2.lower)
         {
             if(item1.lower<item2.lower) i++;
@@ -157,18 +156,22 @@ bool make_patch(const ipdb *db1, const ipdb *db2)
 
     flag = false;
     {
-        char file[MAX_PATH];
+        char file[1024];
+        FILE *fp;
         sprintf(file, "%d-%d.db", db1->date, db2->date);
-        FILE *fp = fopen(file, "wb");
+        fp = fopen(file, "wb");
         if(fp)
         {
             uint32_t crc32 = 0;
+
             crc32 = crc32_mem(crc32, buffer_get(record_buffer), buffer_size(record_buffer));
             crc32 = crc32_mem(crc32, buffer_get(string_buffer), buffer_size(string_buffer));
-            patch_head header = {PATCH_MAGIC, db1->count, db2->count, db1->date, db2->date, buffer_size(record_buffer), crc32};
-            fwrite(&header, sizeof(header), 1, fp);
-            fwrite(buffer_get(record_buffer), buffer_size(record_buffer), 1, fp);
-            fwrite(buffer_get(string_buffer), buffer_size(string_buffer), 1, fp);
+            {
+                patch_head header = {PATCH_MAGIC, db1->count, db2->count, db1->date, db2->date, buffer_size(record_buffer), crc32};
+                fwrite(&header, sizeof(header), 1, fp);
+                fwrite(buffer_get(record_buffer), buffer_size(record_buffer), 1, fp);
+                fwrite(buffer_get(string_buffer), buffer_size(string_buffer), 1, fp);
+            }
             fclose(fp);
             flag = true;
         }
@@ -199,13 +202,14 @@ bool apply_patch(const ipdb *db, const uint8_t *buffer, uint32_t length, const c
     if(length<sizeof(patch_head)) return false;
     if(header->magic!=PATCH_MAGIC) return false;
     if(header->crc32!=crc32_mem(0, (uint8_t*)header->item, length - sizeof(patch_head))) return false;
+    {
+        patch_proxy ctx = {db, header, header->item, (const char*)buffer + sizeof(patch_head) + header->size};
 
-    patch_proxy ctx = {db, header, header->item, (const char*)buffer + sizeof(patch_head) + header->size};
+        ipdb *proxy = ipdb_create(&proxy_handle, NULL, 0, &ctx);
+        //qqwry_build(proxy, file);
+        ipdb_dump(proxy, "525 new.txt");
 
-    ipdb *proxy = ipdb_create(&proxy_handle, NULL, 0, &ctx);
-    //qqwry_build(db, file);
-    ipdb_dump(proxy, "525 new.txt");
-
-    ipdb_release(proxy);
+        ipdb_release(proxy);
+    }
     return true;
 }

@@ -95,8 +95,8 @@ uint32_t crc32_mem(uint32_t crc32, const uint8_t* buffer, uint32_t len)
     {
         for (i = 0; i < 256; i++)
         {
-            crc32_table[i] = i;
             uint32_t j = 0;
+            crc32_table[i] = i;
             for (; j < 8; j++)
             {
                 if (crc32_table[i] & 1)
