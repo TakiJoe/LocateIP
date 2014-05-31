@@ -13,14 +13,11 @@ static bool qqwry_iter(const ipdb *ctx, ipdb_item *item, uint32_t index)
     {
         char *ptr = (char*)ctx->buffer;
         char *p = ptr + *(uint32_t*)ptr;
-        char *offset;
-
         uint32_t temp = get_3b(p + 7 * index + 4);
+        char *offset = ptr + temp + 4;
 
         item->lower = *(uint32_t*)(p + 7 * index);
         item->upper = *(uint32_t*)(ptr + temp);
-
-        offset = ptr + temp + 4;
 
         if( 0x01 == *offset )
             offset = ptr + get_3b(offset + 1);
@@ -65,22 +62,19 @@ static bool qqwry_find(const ipdb *ctx, ipdb_item *item, uint32_t ip)
     return qqwry_iter(ctx, item, low);
 }
 
-static bool qqwry_init(ipdb * ctx, const uint8_t *buffer, uint32_t length)
+static bool qqwry_init(ipdb * ctx)
 {
-    ipdb_item item;
-    uint32_t year = 0, month = 0, day = 0;
-
-    ctx->buffer = buffer;
-    ctx->length = length;
-
-    if(length>=8)
+    if(ctx->length>=8)
     {
-        uint32_t *pos = (uint32_t*)buffer;
+        uint32_t *pos = (uint32_t*)ctx->buffer;
         uint32_t idx_first = *pos;
         uint32_t idx_last = *(pos + 1);
         ctx->count = idx_last - idx_first;
-        if( (ctx->count % 7 == 0) && (length - idx_last == 7) )
+        if( (ctx->count % 7 == 0) && (ctx->length - idx_last == 7) )
         {
+            ipdb_item item;
+            uint32_t year = 0, month = 0, day = 0;
+
             ctx->count /= 7;
             ctx->count++;
 
@@ -102,4 +96,10 @@ static bool qqwry_init(ipdb * ctx, const uint8_t *buffer, uint32_t length)
     return ctx->count!=0;
 }
 
-const ipdb_handle qqwry_handle = {qqwry_init, qqwry_iter, qqwry_find};
+static bool qqwry_quit(ipdb * ctx)
+{
+    //
+    return true;
+}
+
+const ipdb_handle qqwry_handle = {qqwry_init, qqwry_iter, qqwry_find, qqwry_quit};

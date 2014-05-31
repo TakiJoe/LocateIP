@@ -5,13 +5,26 @@ ipdb* ipdb_create(const ipdb_handle *handle, const uint8_t *buffer, uint32_t len
 {
     ipdb *ctx = calloc(1, sizeof(ipdb));
     ctx->handle = handle;
-    ctx->handle->init(ctx, buffer, length);
+    ctx->buffer = buffer;
+    ctx->length = length;
+    ctx->handle->init(ctx);
     return ctx;
 }
 
 void ipdb_release(ipdb *ctx)
 {
+    if(ctx->handle->quit) ctx->handle->quit(ctx);
     free(ctx);
+}
+
+bool ipdb_find(const ipdb *ctx, ipdb_item *item, const char *ip)
+{
+    return ctx->handle->find(ctx, item, str2ip(ip));
+}
+
+bool ipdb_next(ipdb_iter *iter, ipdb_item *item)
+{
+    return iter->ctx->handle->iter(iter->ctx, item, iter->index++);
 }
 
 bool ipdb_dump(const ipdb *ctx, const char *file)
@@ -36,14 +49,4 @@ bool ipdb_dump(const ipdb *ctx, const char *file)
         return true;
     }
     return false;
-}
-
-bool ipdb_find(const ipdb *ctx, ipdb_item *item, const char *ip)
-{
-    return ctx->handle->find(ctx, item, str2ip(ip));
-}
-
-bool ipdb_next(ipdb_iter *iter, ipdb_item *item)
-{
-    return iter->ctx->handle->iter(iter->ctx, item, iter->index++);
 }

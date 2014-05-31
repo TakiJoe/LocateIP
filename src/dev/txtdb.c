@@ -132,15 +132,14 @@ static bool txtdb_iter(const ipdb *ctx, ipdb_item *item, uint32_t index)
 {
     static char buf[1024];
     static uint32_t last_offset = 0;
-    if(index==0) last_offset = 0;
-
     uint32_t offset = 0;
+
+    if(index==0) last_offset = 0;
     while((offset = readline(ctx->buffer + last_offset, ctx->length - last_offset, buf)))
     {
-        last_offset += offset;
         char *lower, *upper, *zone, *area;
-        bool right = split_line(buf, &lower, &upper, &zone, &area);
-        if(right)
+        last_offset += offset;
+        if(split_line(buf, &lower, &upper, &zone, &area))
         {
             item->lower = str2ip(lower);
             item->upper = str2ip(upper);
@@ -157,23 +156,20 @@ static bool txtdb_find(const ipdb *ctx, ipdb_item *item, uint32_t ip)
     return false;
 }
 
-static bool txtdb_init(ipdb * ctx, const uint8_t *buffer, uint32_t length)
+static bool txtdb_init(ipdb * ctx)
 {
-    ctx->buffer = buffer;
-    ctx->length = length;
-
     char buf[1024];
     uint32_t last_offset = 0;
     uint32_t offset = 0;
-    while((offset = readline(buffer + last_offset, length - last_offset, buf)))
+
+    while((offset = readline(ctx->buffer + last_offset, ctx->length - last_offset, buf)))
     {
-        last_offset += offset;
         char *lower, *upper, *zone, *area;
-        bool right = split_line(buf, &lower, &upper, &zone, &area);
-        if(right) ctx->count++;
+        last_offset += offset;
+        if(split_line(buf, &lower, &upper, &zone, &area)) ctx->count++;
     }
 
     return ctx->count!=0;
 }
 
-const ipdb_handle txtdb_handle = {txtdb_init, txtdb_iter, txtdb_find};
+const ipdb_handle txtdb_handle = {txtdb_init, txtdb_iter, txtdb_find, NULL};

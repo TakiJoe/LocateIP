@@ -15,6 +15,7 @@ void* my_calloc(size_t n, size_t len)
 void* my_realloc(void *ptr, size_t len)
 {
     if(ptr==0) calloc_times++;
+    if(len==0) free_times++;
     return realloc(ptr, len);
 }
 void my_free(void *ptr)

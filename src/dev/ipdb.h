@@ -35,6 +35,7 @@ struct ipdb_t
     uint32_t            count;
     uint32_t            date;
     const ipdb_handle*  handle;
+    void*               extend;
 };
 
 struct ipdb_iter_t
@@ -53,17 +54,18 @@ struct ipdb_item_t
 
 struct ipdb_handle_t
 {
-    bool                (*init)(ipdb *, const uint8_t *, uint32_t);
+    bool                (*init)(ipdb *);
     bool                (*iter)(const ipdb *, ipdb_item *, uint32_t);
     bool                (*find)(const ipdb *, ipdb_item *, uint32_t);
+    bool                (*quit)(ipdb *);
 };
 
 ipdb* ipdb_create(const ipdb_handle *, const uint8_t *, uint32_t);
 void ipdb_release(ipdb *);
 
-bool ipdb_dump(const ipdb *, const char *);
 bool ipdb_find(const ipdb *, ipdb_item *, const char *);
 bool ipdb_next(ipdb_iter *, ipdb_item *);
+bool ipdb_dump(const ipdb *, const char *);
 
 #ifdef __cplusplus
 }
