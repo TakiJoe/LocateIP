@@ -1,38 +1,53 @@
 #include "ipdb.h"
 #include "util.h"
 
-ipdb* ipdb_create(const ipdb_handle *handle, const uint8_t *buffer, uint32_t length)
+ipdb* ipdb_create(const ipdb_handle *handle, const uint8_t *buffer, uint32_t length, void *extend)
 {
-    ipdb *ctx = calloc(1, sizeof(ipdb));
-    ctx->handle = handle;
-    ctx->buffer = buffer;
-    ctx->length = length;
-    ctx->handle->init(ctx);
-    return ctx;
+    ipdb *db = calloc(1, sizeof(ipdb));
+    db->handle = handle;
+    db->buffer = buffer;
+    db->length = length;
+    db->extend = extend;
+    if(db->handle->init)
+    {
+        db->handle->init(db);
+    }
+    return db;
 }
 
-void ipdb_release(ipdb *ctx)
+void ipdb_release(ipdb *db)
 {
-    if(ctx->handle->quit) ctx->handle->quit(ctx);
-    free(ctx);
+    if(db->handle->quit)
+    {
+        db->handle->quit(db);
+    }
+    free(db);
 }
 
-bool ipdb_find(const ipdb *ctx, ipdb_item *item, const char *ip)
+bool ipdb_find(const ipdb *db, ipdb_item *item, const char *ip)
 {
-    return ctx->handle->find(ctx, item, str2ip(ip));
+    if(db->handle->find)
+    {
+        return db->handle->find(db, item, str2ip(ip));
+    }
+    return false;
 }
 
 bool ipdb_next(ipdb_iter *iter, ipdb_item *item)
 {
-    return iter->ctx->handle->iter(iter->ctx, item, iter->index++);
+    if(iter->db->handle->iter)
+    {
+        return iter->db->handle->iter(iter->db, item, iter->index++);
+    }
+    return false;
 }
 
-bool ipdb_dump(const ipdb *ctx, const char *file)
+bool ipdb_dump(const ipdb *db, const char *file)
 {
     FILE *fp = fopen(file, "wb");
     if(fp)
     {
-        ipdb_iter iter = {ctx, 0};
+        ipdb_iter iter = {db, 0};
         ipdb_item item;
         while(ipdb_next(&iter, &item))
         {
@@ -44,7 +59,7 @@ bool ipdb_dump(const ipdb *ctx, const char *file)
             fprintf(fp, "%-16s%-16s%s%s%s\r\n", ip1_t, ip2_t, item.zone, item.area[0]?" ":"", item.area);
         }
 
-        fprintf(fp, "\r\n\r\nIP数据库共有数据 ： %d 条\r\n", ctx->count);
+        fprintf(fp, "\r\n\r\nIP数据库共有数据 ： %d 条\r\n", db->count);
         fclose(fp);
         return true;
     }

@@ -7,6 +7,7 @@ extern "C" {
 
 #include "ipdb.h"
 
+//
 char* ip2str(char *buf, size_t len, int ip);
 uint32_t str2ip(const char *lp);
 
@@ -24,6 +25,9 @@ uint32_t buffer_append(buffer *buf, const void* src, uint32_t length);
 uint8_t* buffer_get(const buffer *buf);
 uint32_t buffer_size(const buffer *buf);
 void buffer_release(buffer *buf);
+
+//
+uint32_t crc32_mem(uint32_t crc32, const uint8_t* buffer, uint32_t len);
 
 #ifdef __cplusplus
 }

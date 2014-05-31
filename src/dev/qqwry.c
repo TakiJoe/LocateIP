@@ -7,11 +7,11 @@ static uint32_t get_3b(const char *mem)
     return 0x00ffffff & *(uint32_t*)(mem);
 }
 
-static bool qqwry_iter(const ipdb *ctx, ipdb_item *item, uint32_t index)
+static bool qqwry_iter(const ipdb *db, ipdb_item *item, uint32_t index)
 {
-    if(index<ctx->count)
+    if(index<db->count)
     {
-        char *ptr = (char*)ctx->buffer;
+        char *ptr = (char*)db->buffer;
         char *p = ptr + *(uint32_t*)ptr;
         uint32_t temp = get_3b(p + 7 * index + 4);
         char *offset = ptr + temp + 4;
@@ -42,13 +42,13 @@ static bool qqwry_iter(const ipdb *ctx, ipdb_item *item, uint32_t index)
     return false;
 }
 
-static bool qqwry_find(const ipdb *ctx, ipdb_item *item, uint32_t ip)
+static bool qqwry_find(const ipdb *db, ipdb_item *item, uint32_t ip)
 {
-    char *ptr = (char*)ctx->buffer;
+    char *ptr = (char*)db->buffer;
     char *p = ptr + *(uint32_t*)ptr;
 
     uint32_t low = 0;
-    uint32_t high = ctx->count;
+    uint32_t high = db->count;
     while (1)
     {
         if( low >= high - 1 )
@@ -59,26 +59,26 @@ static bool qqwry_find(const ipdb *ctx, ipdb_item *item, uint32_t ip)
         else
             low = (low + high)/2;
     }
-    return qqwry_iter(ctx, item, low);
+    return qqwry_iter(db, item, low);
 }
 
-static bool qqwry_init(ipdb * ctx)
+static bool qqwry_init(ipdb * db)
 {
-    if(ctx->length>=8)
+    if(db->length>=8)
     {
-        uint32_t *pos = (uint32_t*)ctx->buffer;
+        uint32_t *pos = (uint32_t*)db->buffer;
         uint32_t idx_first = *pos;
         uint32_t idx_last = *(pos + 1);
-        ctx->count = idx_last - idx_first;
-        if( (ctx->count % 7 == 0) && (ctx->length - idx_last == 7) )
+        db->count = idx_last - idx_first;
+        if( (db->count % 7 == 0) && (db->length - idx_last == 7) )
         {
             ipdb_item item;
             uint32_t year = 0, month = 0, day = 0;
 
-            ctx->count /= 7;
-            ctx->count++;
+            db->count /= 7;
+            db->count++;
 
-            qqwry_iter(ctx, &item, ctx->count-1);
+            qqwry_iter(db, &item, db->count-1);
             if( sscanf(item.area, "%d年%d月%d日", &year, &month, &day)!=3 ) // 纯真IP数据库
             {
                 if( sscanf(item.area, "%4d%2d%2d", &year, &month, &day)!=3 ) // 珊瑚虫IP数据库
@@ -86,20 +86,14 @@ static bool qqwry_init(ipdb * ctx)
                     year = 1899, month = 12, day = 30; // 未知数据库
                 }
             }
-            ctx->date = year*10000 + month*100 + day;
+            db->date = year*10000 + month*100 + day;
         }
         else
         {
-            ctx->count = 0;
+            db->count = 0;
         }
     }
-    return ctx->count!=0;
+    return db->count!=0;
 }
 
-static bool qqwry_quit(ipdb * ctx)
-{
-    //
-    return true;
-}
-
-const ipdb_handle qqwry_handle = {qqwry_init, qqwry_iter, qqwry_find, qqwry_quit};
+const ipdb_handle qqwry_handle = {qqwry_init, qqwry_iter, qqwry_find, NULL};

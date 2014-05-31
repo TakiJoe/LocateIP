@@ -23,15 +23,15 @@ typedef struct
     uint32_t length:8;
 } mon17_item;
 
-static bool mon17_iter(const ipdb *ctx, ipdb_item *item, uint32_t index)
+static bool mon17_iter(const ipdb *db, ipdb_item *item, uint32_t index)
 {
     char *parting;
     static char buf[256];
-    if(index<ctx->count)
+    if(index<db->count)
     {
-        mon17_item *ptr = (mon17_item*)(ctx->buffer + 4 + 256*4);
+        mon17_item *ptr = (mon17_item*)(db->buffer + 4 + 256*4);
 
-        const char *text = (const char*)ctx->buffer + 4 + 256*4 + ctx->count*8 + ptr[index].offset;
+        const char *text = (const char*)db->buffer + 4 + 256*4 + db->count*8 + ptr[index].offset;
 
         item->lower = index==0?0:(swap32(ptr[index-1].upper)+1);
         item->upper = swap32(ptr[index].upper);
@@ -49,43 +49,43 @@ static bool mon17_iter(const ipdb *ctx, ipdb_item *item, uint32_t index)
     return false;
 }
 
-static bool mon17_find(const ipdb *ctx, ipdb_item *item, uint32_t ip)
+static bool mon17_find(const ipdb *db, ipdb_item *item, uint32_t ip)
 {
-    uint32_t *index = (uint32_t*)(ctx->buffer + 4);
+    uint32_t *index = (uint32_t*)(db->buffer + 4);
     uint32_t offset = index[ip>>24];
     uint32_t _ip = swap32(ip);
 
-    mon17_item *ptr = (mon17_item*)(ctx->buffer + 4 + 256*4);
-    for(;offset<ctx->count;offset++)
+    mon17_item *ptr = (mon17_item*)(db->buffer + 4 + 256*4);
+    for(;offset<db->count;offset++)
     {
         if( memcmp(&ptr[offset].upper, &_ip, 4)>=0 )
         {
             break;
         }
     }
-    return mon17_iter(ctx, item, offset);
+    return mon17_iter(db, item, offset);
 }
 
-static bool mon17_init(ipdb* ctx)
+static bool mon17_init(ipdb* db)
 {
-    if(ctx->length>=4 && sizeof(mon17_item)==8)
+    if(db->length>=4 && sizeof(mon17_item)==8)
     {
-        uint32_t *pos = (uint32_t*)ctx->buffer;
+        uint32_t *pos = (uint32_t*)db->buffer;
         uint32_t index_length = swap32(*pos);
 
         ipdb_item item;
         uint32_t year = 0, month = 0, day = 0;
         
-        ctx->count = (index_length - 4 - 256*4 - 1024)/8;
+        db->count = (index_length - 4 - 256*4 - 1024)/8;
 
-        mon17_iter(ctx, &item, ctx->count-1);
+        mon17_iter(db, &item, db->count-1);
         if( sscanf(item.area, "%4d%2d%2d", &year, &month, &day)!=3 ) // 17mon数据库
         {
             year = 1899, month = 12, day = 30; // 未知数据库
         }
-        ctx->date = year*10000 + month*100 + day;
+        db->date = year*10000 + month*100 + day;
     }
-    return ctx->count!=0;
+    return db->count!=0;
 }
 
 const ipdb_handle mon17_handle = {mon17_init, mon17_iter, mon17_find, NULL};

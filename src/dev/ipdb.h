@@ -40,7 +40,7 @@ struct ipdb_t
 
 struct ipdb_iter_t
 {
-    const ipdb*         ctx;
+    const ipdb*         db;
     uint32_t            index;
 };
 
@@ -60,7 +60,7 @@ struct ipdb_handle_t
     bool                (*quit)(ipdb *);
 };
 
-ipdb* ipdb_create(const ipdb_handle *, const uint8_t *, uint32_t);
+ipdb* ipdb_create(const ipdb_handle *, const uint8_t *, uint32_t, void *);
 void ipdb_release(ipdb *);
 
 bool ipdb_find(const ipdb *, ipdb_item *, const char *);

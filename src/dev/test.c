@@ -57,7 +57,7 @@ void test_read_qqwry()
 {
     uint32_t length = 0;
     uint8_t *buffer = readfile("qqwry.dat", &length);
-    ipdb *db = ipdb_create(&qqwry_handle, buffer, length);
+    ipdb *db = ipdb_create(&qqwry_handle, buffer, length, NULL);
     printf("%d %d\n", db->count, db->date);
 
     if(db->count)
@@ -84,7 +84,7 @@ void test_read_mon17()
 {
     uint32_t length = 0;
     uint8_t *buffer = readfile("17monipdb.dat", &length);
-    ipdb *db = ipdb_create(&mon17_handle, buffer, length);
+    ipdb *db = ipdb_create(&mon17_handle, buffer, length, NULL);
     printf("%d %d\n", db->count, db->date);
 
     if(db->count)
@@ -111,7 +111,7 @@ void test_read_txt()
 {
     uint32_t length = 0;
     uint8_t *buffer = readfile("1.txt", &length);
-    ipdb *db = ipdb_create(&txtdb_handle, buffer, length);
+    ipdb *db = ipdb_create(&txtdb_handle, buffer, length, NULL);
     printf("%d %d\n", db->count, db->date);
 
     if(db->count)
@@ -127,7 +127,7 @@ void test_build_qqwry()
 {
     uint32_t length = 0;
     uint8_t *buffer = readfile("qqwry_old.dat", &length);
-    ipdb *db = ipdb_create(&qqwry_handle, buffer, length);
+    ipdb *db = ipdb_create(&qqwry_handle, buffer, length, NULL);
 
     if(db->count) qqwry_build(db, "qqwry.dat");
 
@@ -139,10 +139,10 @@ void test_build_patch()
 {
     uint32_t length1 = 0;
     uint32_t length2 = 0;
-    uint8_t *buffer1 = readfile("qqwry 325.dat", &length1);
+    uint8_t *buffer1 = readfile("qqwry 520.dat", &length1);
     uint8_t *buffer2 = readfile("qqwry 525.dat", &length2);
-    ipdb *db1 = ipdb_create(&qqwry_handle, buffer1, length1);
-    ipdb *db2 = ipdb_create(&qqwry_handle, buffer2, length2);
+    ipdb *db1 = ipdb_create(&qqwry_handle, buffer1, length1, NULL);
+    ipdb *db2 = ipdb_create(&qqwry_handle, buffer2, length2, NULL);
 
     if(db1->count&&db2->count) make_patch(db1, db2);
 
@@ -151,6 +151,25 @@ void test_build_patch()
     ipdb_release(db1);
     ipdb_release(db2);
 }
+
+void test_apply_patch()
+{
+    uint32_t length1 = 0;
+    uint32_t length2 = 0;
+    uint8_t *buffer1 = readfile("qqwry 520.dat", &length1);
+    uint8_t *buffer2 = readfile("20140520-20140525.db", &length2);
+
+    ipdb *db1 = ipdb_create(&qqwry_handle, buffer1, length1, NULL);
+    if(db1->count)
+    {
+        bool x = apply_patch(db1, buffer2, length2, "qqwry patch.dat");
+        printf("apply_patch %d\n",x);
+    }
+
+    if(buffer1) free(buffer1);
+    if(buffer2) free(buffer2);
+    ipdb_release(db1);
+}
 int main()
 {
     //test_table();
@@ -158,6 +177,7 @@ int main()
     //test_read_mon17();
     //test_build_qqwry();
     //test_build_patch();
+    test_apply_patch();
     //test_read_txt();
     printf("calloc_times:%d free_times:%d %d\n",calloc_times,free_times,calloc_times-free_times);
     return 0;

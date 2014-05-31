@@ -46,7 +46,7 @@ uint32_t str2ip(const char *lp)
     return ret;
 }
 
-
+//
 buffer* buffer_create()
 {
     return calloc(1, sizeof(buffer));
@@ -84,4 +84,35 @@ void buffer_release(buffer *buf)
 {
     if(buf->data) free(buf->data);
     free(buf);
+}
+
+//
+uint32_t crc32_mem(uint32_t crc32, const uint8_t* buffer, uint32_t len)
+{
+    static uint32_t crc32_table[256] = {0};
+    uint32_t i = 0;
+    if ( crc32_table[1]==0 )
+    {
+        for (i = 0; i < 256; i++)
+        {
+            crc32_table[i] = i;
+            uint32_t j = 0;
+            for (; j < 8; j++)
+            {
+                if (crc32_table[i] & 1)
+                    crc32_table[i] = (crc32_table[i] >> 1) ^ 0xEDB88320;
+                else
+                    crc32_table[i] >>= 1;
+            }
+        }
+    }
+
+    crc32 = ~crc32;
+    i = 0;
+    for (; i < len ; i++ )
+    {
+        crc32 = (crc32 >> 8) ^ crc32_table[(crc32 & 0xFF) ^ buffer[i]];
+    }
+
+    return ~crc32;
 }
