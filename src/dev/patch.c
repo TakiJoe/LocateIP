@@ -17,6 +17,7 @@ typedef struct
     uint32_t            line:24;
     uint32_t            method:8;
     uint32_t            lower;
+    uint32_t            upper;
     uint32_t            zone;
     uint32_t            area;
 } patch_item;
@@ -42,6 +43,7 @@ typedef struct
     patch_head*         header;
     patch_item*         item;
     const char*         string;
+    void *              extend;
 } patch_proxy;
 
 bool make_patch(const ipdb *db1, const ipdb *db2)
@@ -109,6 +111,7 @@ bool make_patch(const ipdb *db1, const ipdb *db2)
                 item.line = n + k;
                 item.method = REMOVE;
                 item.lower = 0;
+                item.upper = 0;
                 item.zone = 0;
                 item.area = 0;
                 buffer_append(record_buffer, &item, sizeof(patch_item));
@@ -118,13 +121,14 @@ bool make_patch(const ipdb *db1, const ipdb *db2)
             {
                 db2->handle->iter(db2, &item2, m + k);
                 zone_offset = buffer_size(string_buffer);
-                buffer_append(string_buffer, &item2.zone, strlen(item2.zone) + 1);
+                buffer_append(string_buffer, item2.zone, strlen(item2.zone) + 1);
                 area_offset = buffer_size(string_buffer);
-                buffer_append(string_buffer, &item2.area, strlen(item2.area) + 1);
+                buffer_append(string_buffer, item2.area, strlen(item2.area) + 1);
 
                 item.line = i - 1;
                 item.method = INSERT;
                 item.lower = item2.lower;
+                item.upper = item2.upper;
                 item.zone = zone_offset;
                 item.area = area_offset;
                 buffer_append(record_buffer, &item, sizeof(patch_item));
@@ -136,13 +140,14 @@ bool make_patch(const ipdb *db1, const ipdb *db2)
         if( strcmp(item1.zone, item2.zone) || strcmp(item1.area, item2.area) )
         {
             zone_offset = buffer_size(string_buffer);
-            buffer_append(string_buffer, &item2.zone, strlen(item2.zone) + 1);
+            buffer_append(string_buffer, item2.zone, strlen(item2.zone) + 1);
             area_offset = buffer_size(string_buffer);
-            buffer_append(string_buffer, &item2.area, strlen(item2.area) + 1);
+            buffer_append(string_buffer, item2.area, strlen(item2.area) + 1);
 
             item.line = i;
             item.method = MODIFY;
             item.lower = item2.lower;
+            item.upper = item2.upper;
             item.zone = zone_offset;
             item.area = area_offset;
             buffer_append(record_buffer, &item, sizeof(patch_item));
@@ -184,6 +189,13 @@ bool make_patch(const ipdb *db1, const ipdb *db2)
 
 static bool proxy_iter(const ipdb *db, ipdb_item *item, uint32_t index)
 {
+    patch_proxy *ctx = (patch_proxy *)db->extend;
+    if(index<db->count)
+    {
+        memcpy(item, (ipdb_item *)ctx->extend + index, sizeof(ipdb_item));
+        return true;
+    }
+
     return false;
 }
 
@@ -192,18 +204,64 @@ static bool proxy_init(ipdb* db)
     patch_proxy *ctx = (patch_proxy *)db->extend;
     db->count = ctx->header->count2;
     db->date = ctx->header->date2;
+
+    ctx->extend = malloc(db->count * sizeof(ipdb_item));
+    {
+        int patch = ctx->header->size / sizeof(patch_item) - 1;
+        int i = ctx->header->count1 - 1;
+        int j = ctx->header->count2 - 1;
+        ipdb_item item;
+        ipdb_item *temp = (ipdb_item *)ctx->extend;
+        for(;i>=0;i--)
+        {
+            ctx->db->handle->iter(ctx->db, &item, i);
+            if(i!=ctx->item[patch].line)
+            {
+                memcpy(&temp[j], &item, sizeof(ipdb_item));
+                j--;
+            }
+            else
+            {
+                switch(ctx->item[patch].method)
+                {
+                    case INSERT:
+                        i++;//don't use break
+                    case MODIFY:
+                        temp[j].lower = ctx->item[patch].lower;
+                        temp[j].upper = ctx->item[patch].upper;
+                        temp[j].zone = (const char*)(ctx->string + ctx->item[patch].zone);
+                        temp[j].area = (const char*)(ctx->string + ctx->item[patch].area);
+                        j--;
+                        break;
+                    case REMOVE:
+                        break;
+                }
+                patch--;
+            }
+        }
+        if ( patch!=-1 || j!=-1 ) return false;
+    }
+
     return db->count!=0;
 }
-const ipdb_handle proxy_handle = {proxy_init, proxy_iter, NULL, NULL};
+static bool proxy_quit(ipdb* db)
+{
+    patch_proxy *ctx = (patch_proxy *)db->extend;
+    free(ctx->extend);
+    return true;
+}
+const ipdb_handle proxy_handle = {proxy_init, proxy_iter, NULL, proxy_quit};
 
 bool apply_patch(const ipdb *db, const uint8_t *buffer, uint32_t length, const char *file)
 {
     patch_head *header = (patch_head*)buffer;
     if(length<sizeof(patch_head)) return false;
     if(header->magic!=PATCH_MAGIC) return false;
+    if(header->date1!=db->date) return false;
+    if(header->count1!=db->count) return false;
     if(header->crc32!=crc32_mem(0, (uint8_t*)header->item, length - sizeof(patch_head))) return false;
     {
-        patch_proxy ctx = {db, header, header->item, (const char*)buffer + sizeof(patch_head) + header->size};
+        patch_proxy ctx = {db, header, header->item, (const char*)buffer + sizeof(patch_head) + header->size, 0};
 
         ipdb *proxy = ipdb_create(&proxy_handle, NULL, 0, &ctx);
         //qqwry_build(proxy, file);

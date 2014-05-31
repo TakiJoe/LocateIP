@@ -46,10 +46,10 @@ struct ipdb_iter_t
 
 struct ipdb_item_t
 {
-    const char*         zone;
-    const char*         area;
     uint32_t            lower;
     uint32_t            upper;
+    const char*         zone;
+    const char*         area;
 };
 
 struct ipdb_handle_t
