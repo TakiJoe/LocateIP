@@ -117,7 +117,18 @@ void test_read_txt()
 
     if(db->count)
     {
-        //ipdb_dump(db, "txtdb.txt");
+        ipdb_dump(db, "2.txt");
+
+        ipdb_item item;
+        if( ipdb_find(db, &item, "112.121.182.84") )
+        {
+            char ip1[16];
+            char ip2[16];
+
+            char *ip1_t = ip2str(ip1, sizeof(ip1), item.lower);
+            char *ip2_t = ip2str(ip2, sizeof(ip2), item.upper);
+            printf("%s %s %s %s\n", ip1_t, ip2_t, item.zone, item.area);
+        }
     }
 
     if(buffer) free(buffer);
@@ -202,8 +213,8 @@ int main()
     //test_build_qqwry();
     //test_build_patch();
     //test_apply_patch();
-    //test_read_txt();
-    test_cz_update();
+    test_read_txt();
+    //test_cz_update();
     printf("calloc_times:%d free_times:%d %d\n",calloc_times,free_times,calloc_times-free_times);
     //getchar();
     return 0;

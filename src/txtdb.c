@@ -1,4 +1,5 @@
 #include "ipdb.h"
+#include "util.h"
 #include <ctype.h>
 
 uint32_t skip_linefeed(const uint8_t *buffer, uint32_t length)
@@ -130,25 +131,46 @@ bool split_line(char *buf, const char **lower, const char **upper, const char **
 
 static bool txtdb_iter(const ipdb *db, ipdb_item *item, uint32_t index)
 {
-    static char buf[1024];
-    static uint32_t last_offset = 0;
-    uint32_t offset = 0;
-
-    if(index==0) last_offset = 0;
-    while((offset = readline(db->buffer + last_offset, db->length - last_offset, buf)))
+    const buffer *record_buffer = (const buffer *)db->extend;
+    const uint32_t *record = (const uint32_t *)buffer_get(record_buffer);
+    if(index<db->count)
     {
-        const char *lower, *upper, *zone, *area;
-        last_offset += offset;
-        if(split_line(buf, &lower, &upper, &zone, &area))
+        static char buf[1024];
+        uint32_t offset = record[index*2];
+        if(readline(db->buffer + offset, db->length - offset, buf))
         {
-            item->lower = str2ip(lower);
-            item->upper = str2ip(upper);
-            item->zone = zone;
-            item->area = area;
-            return true;
+            const char *lower, *upper, *zone, *area;
+            if(split_line(buf, &lower, &upper, &zone, &area))
+            {
+                item->lower = str2ip(lower);
+                item->upper = str2ip(upper);
+                item->zone = zone;
+                item->area = area;
+                return true;
+            }
         }
     }
     return false;
+}
+
+static bool txtdb_find(const ipdb *db, ipdb_item *item, uint32_t ip)
+{
+    const buffer *record_buffer = (const buffer *)db->extend;
+    const uint32_t *record = (const uint32_t *)buffer_get(record_buffer);
+
+    uint32_t low = 0;
+    uint32_t high = db->count;
+    while (1)
+    {
+        if( low >= high - 1 )
+            break;
+
+        if( ip < record[(low + high)/2*2 + 1] )
+            high = (low + high)/2;
+        else
+            low = (low + high)/2;
+    }
+    return txtdb_iter(db, item, low);
 }
 
 static bool txtdb_init(ipdb * db)
@@ -157,14 +179,30 @@ static bool txtdb_init(ipdb * db)
     uint32_t last_offset = 0;
     uint32_t offset = 0;
 
+    buffer *record_buffer = buffer_create();
+
     while((offset = readline(db->buffer + last_offset, db->length - last_offset, buf)))
     {
         const char *lower, *upper, *zone, *area;
+        if(split_line(buf, &lower, &upper, &zone, &area))
+        {
+            uint32_t ip = str2ip(lower);
+            buffer_append(record_buffer, &last_offset, sizeof(uint32_t));
+            buffer_append(record_buffer, &ip, sizeof(uint32_t));
+            db->count++;
+        }
         last_offset += offset;
-        if(split_line(buf, &lower, &upper, &zone, &area)) db->count++;
     }
 
+    db->extend = record_buffer;
     return db->count!=0;
 }
 
-const ipdb_handle txtdb_handle = {txtdb_init, txtdb_iter, NULL, NULL};
+static bool txtdb_quit(ipdb* db)
+{
+    buffer *record_buffer = (buffer *)db->extend;
+    buffer_release(record_buffer);
+    return true;
+}
+
+const ipdb_handle txtdb_handle = {txtdb_init, txtdb_iter, txtdb_find, txtdb_quit};
