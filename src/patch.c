@@ -258,7 +258,7 @@ ipdb* apply_patch(const ipdb *db, const uint8_t *buffer, uint32_t length)
     if(header->magic!=PATCH_MAGIC) return NULL;
     if(header->date1!=db->date) return NULL;
     if(header->count1!=db->count) return NULL;
-    if(header->crc32!=crc32_mem(0, (uint8_t*)header->item, length - sizeof(patch_head))) return false;
+    if(header->crc32!=crc32_mem(0, (uint8_t*)header->item, length - sizeof(patch_head))) return NULL;
     {
         patch_proxy ctx = {db, header, header->item, (const char*)buffer + sizeof(patch_head) + header->size, 0};
 
