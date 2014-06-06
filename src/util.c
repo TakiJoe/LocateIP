@@ -147,7 +147,7 @@ typedef struct
 } table_key;
 
 
-uint32_t calc_hash(const char* str, size_t len, uint32_t seed)
+static uint32_t calc_hash(const char* str, size_t len, uint32_t seed)
 {
     uint32_t h = (uint32_t)len ^ seed;
     size_t step = (len >> 5) + 1;
@@ -156,7 +156,7 @@ uint32_t calc_hash(const char* str, size_t len, uint32_t seed)
         h = h ^ ((h << 5) + (h >> 2) + (uint32_t)str[i - 1]);
     return h & (0xFFFFFFFF >> 10);
 }
-const table_key* make_table_key(const char* str, size_t len, uint32_t seed)
+static const table_key* make_table_key(const char* str, size_t len, uint32_t seed)
 {
     static char buffer[1 << 10];
     table_key *key = (table_key*)buffer;
@@ -164,11 +164,11 @@ const table_key* make_table_key(const char* str, size_t len, uint32_t seed)
     memcpy(key->str, str, len * sizeof(char));
     return key;
 }
-uint32_t get_name_len(const table_key* key)
+static uint32_t get_name_len(const table_key* key)
 {
     return key->hash >> 22;
 }
-const table_node* make_node(table *t, const table_key* key)
+static const table_node* make_node(table *t, const table_key* key)
 {
     static table_node node;
     node.key = buffer_size(t->str);
@@ -178,28 +178,28 @@ const table_node* make_node(table *t, const table_key* key)
     node.value = 0;
     return &node;
 }
-table_node* node_position(table *t, const table_key* key)
+static table_node* node_position(table *t, const table_key* key)
 {
     return t->head + (key->hash & (t->size - 1));
 }
-bool is_empty_node(const table_node* node)
+static bool is_empty_node(const table_node* node)
 {
     return node->key == 0;
 }
-bool is_same_key(const table_key* key, const table_key* cmpkey)
+static bool is_same_key(const table_key* key, const table_key* cmpkey)
 {
     return key->hash == cmpkey->hash && memcmp(key->str, cmpkey->str, get_name_len(cmpkey)) == 0;
 }
-const table_key* get_key(table *t, const table_node* node)
+static const table_key* get_key(table *t, const table_node* node)
 {
     uint8_t *buf = buffer_get(t->str);
     return (const table_key*)&buf[node->key];
 }
-table_node* get_next(const table_node* node)
+static table_node* get_next(const table_node* node)
 {
     return node->next;
 }
-table_node* get_idle_node(table *t)
+static table_node* get_idle_node(table *t)
 {
     while (t->idle > t->head)
     {
@@ -208,13 +208,13 @@ table_node* get_idle_node(table *t)
     }
     return 0;
 }
-void set_node(table_node* node, const table_node* data)
+static void set_node(table_node* node, const table_node* data)
 {
     memcpy(node, data, sizeof(table_node));
 }
 
 table_node* table_insert(table *t, const table_node* data);
-void resize(table *t, uint32_t newsize)
+static void resize(table *t, uint32_t newsize)
 {
     uint32_t i = 0;
     uint32_t oldsize = t->size;
@@ -233,7 +233,7 @@ void resize(table *t, uint32_t newsize)
     }
     free(oldhead);
 }
-table_node* table_find(table *t, const table_key* key)
+static table_node* table_find(table *t, const table_key* key)
 {
     table_node *node = node_position(t, key);
     while (!is_empty_node(node))

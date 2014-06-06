@@ -2,7 +2,7 @@
 #include "util.h"
 #include <ctype.h>
 
-uint32_t skip_linefeed(const uint8_t *buffer, uint32_t length)
+static uint32_t skip_linefeed(const uint8_t *buffer, uint32_t length)
 {
     uint32_t offset = 0;
     for(;offset<length;offset++)
@@ -11,7 +11,7 @@ uint32_t skip_linefeed(const uint8_t *buffer, uint32_t length)
     }
     return offset;
 }
-uint32_t find_linefeed(const uint8_t *buffer, uint32_t length, char *buf)
+static uint32_t find_linefeed(const uint8_t *buffer, uint32_t length, char *buf)
 {
     uint32_t offset = 0;
     for(;offset<length;offset++)
@@ -25,7 +25,7 @@ uint32_t find_linefeed(const uint8_t *buffer, uint32_t length, char *buf)
     }
     return 0;
 }
-uint32_t readline(const uint8_t *buffer, uint32_t length, char *buf)
+static uint32_t readline(const uint8_t *buffer, uint32_t length, char *buf)
 {
     uint32_t skip = skip_linefeed(buffer, length);
     uint32_t offset = find_linefeed(buffer + skip, length - skip, buf);
@@ -36,7 +36,7 @@ uint32_t readline(const uint8_t *buffer, uint32_t length, char *buf)
     return 0;
 }
 
-bool is_legal_ip(const char *ip)
+static bool is_legal_ip(const char *ip)
 {
     uint8_t i = 0;
     uint32_t n = 0;
@@ -61,7 +61,7 @@ bool is_legal_ip(const char *ip)
     return i==3;
 }
 
-bool split_line(char *buf, const char **lower, const char **upper, const char **zone, const char **area)
+static bool split_line(char *buf, const char **lower, const char **upper, const char **zone, const char **area)
 {
     uint8_t state = 1;
     char *ptr = buf;

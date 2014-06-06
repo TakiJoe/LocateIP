@@ -10,7 +10,7 @@ typedef struct
     table*          extend;
 } table_value;
 
-table_value* make_table_value(buffer *buf, table_node *node, uint32_t offset)
+static table_value* make_table_value(buffer *buf, table_node *node, uint32_t offset)
 {
     table_value *node_value = (table_value *)calloc(1, sizeof(table_value));
     node_value->offset = offset;
@@ -18,7 +18,8 @@ table_value* make_table_value(buffer *buf, table_node *node, uint32_t offset)
     node->value = (uint32_t)node_value;
     return node_value;
 }
-void release_table_value(table *t)
+
+static void release_table_value(table *t)
 {
     uint32_t i = 0;
     for(;i<t->size;i++)

@@ -1,6 +1,8 @@
 #ifndef _ZLIB_DECODE_H_
 #define _ZLIB_DECODE_H_
 
+unsigned char *stbi_zlib_decode_malloc(const unsigned char *buffer, unsigned int *len, unsigned int *outlen);
+
 #include <malloc.h>
 #include <memory.h>
 
@@ -354,7 +356,7 @@ static int do_zlib(zbuf *a, char *obuf, unsigned int olen, int exp, int parse_he
    return parse_zlib(a, parse_header);
 }
 
-unsigned char *stbi_zlib_decode_malloc_guesssize(const unsigned char *buffer, unsigned int *len, unsigned int initial_size, unsigned int *outlen)
+static unsigned char *stbi_zlib_decode_malloc_guesssize(const unsigned char *buffer, unsigned int *len, unsigned int initial_size, unsigned int *outlen)
 {
    zbuf a;
    char *p = (char *) malloc(initial_size);

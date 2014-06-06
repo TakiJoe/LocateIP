@@ -2,23 +2,23 @@
 #include <stdlib.h>
 int calloc_times = 0;
 int free_times = 0;
-void* my_malloc(size_t len)
+static void* my_malloc(size_t len)
 {
     calloc_times++;
     return malloc(len);
 }
-void* my_calloc(size_t n, size_t len)
+static void* my_calloc(size_t n, size_t len)
 {
     calloc_times++;
     return calloc(n, len);
 }
-void* my_realloc(void *ptr, size_t len)
+static void* my_realloc(void *ptr, size_t len)
 {
     if(ptr==0) calloc_times++;
     if(len==0) free_times++;
     return realloc(ptr, len);
 }
-void my_free(void *ptr)
+static void my_free(void *ptr)
 {
     free_times++;
     free(ptr);
@@ -36,7 +36,7 @@ void my_free(void *ptr)
 #include "patch.c"
 #include "cz_update.c"
 
-uint8_t* readfile(const char *path, uint32_t *length)
+static uint8_t* readfile(const char *path, uint32_t *length)
 {
     uint8_t* buffer = 0;
     FILE *fp = fopen(path, "rb");
@@ -53,7 +53,7 @@ uint8_t* readfile(const char *path, uint32_t *length)
     return buffer;
 }
 
-void test_table()
+static void test_table()
 {
     buffer *string_buffer = buffer_create();
     table *test = table_create(string_buffer);
@@ -68,7 +68,7 @@ void test_table()
     buffer_release(string_buffer);
 }
 
-void test_read_qqwry()
+static void test_read_qqwry()
 {
     uint32_t length = 0;
     uint8_t *buffer = readfile("qqwry.dat", &length);
@@ -93,7 +93,7 @@ void test_read_qqwry()
     if(buffer) free(buffer);
 }
 
-void test_read_mon17()
+static void test_read_mon17()
 {
     uint32_t length = 0;
     uint8_t *buffer = readfile("17monipdb.dat", &length);
@@ -119,7 +119,7 @@ void test_read_mon17()
     if(buffer) free(buffer);
 }
 
-void test_read_txt()
+static void test_read_txt()
 {
     uint32_t length = 0;
     uint8_t *buffer = readfile("1.txt", &length);
@@ -144,7 +144,7 @@ void test_read_txt()
     if(buffer) free(buffer);
 }
 
-void test_build_qqwry()
+static void test_build_qqwry()
 {
     uint32_t length = 0;
     uint8_t *buffer = readfile("qqwry.dat", &length);
@@ -156,7 +156,8 @@ void test_build_qqwry()
     ipdb_release(db);
 
 }
-void test_build_patch()
+
+static void test_build_patch()
 {
     uint32_t length1 = 0;
     uint32_t length2 = 0;
@@ -177,7 +178,7 @@ void test_build_patch()
     if(buffer2) free(buffer2);
 }
 
-void test_apply_patch()
+static void test_apply_patch()
 {
     uint32_t length1 = 0;
     uint32_t length2 = 0;
@@ -202,7 +203,7 @@ void test_apply_patch()
     if(buffer2) free(buffer2);
 }
 
-void test_cz_update()
+static void test_cz_update()
 {
     uint32_t length1 = 0;
     uint32_t length2 = 0;
