@@ -49,7 +49,7 @@ uint32_t str2ip(const char *lp)
 //
 buffer* buffer_create()
 {
-    return calloc(1, sizeof(buffer));
+    return (buffer *)calloc(1, sizeof(buffer));
 }
 
 uint32_t buffer_expand(buffer *buf, uint32_t length)

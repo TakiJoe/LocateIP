@@ -3,7 +3,7 @@
 
 ipdb* ipdb_create(const ipdb_handle *handle, const uint8_t *buffer, uint32_t length, void *extend)
 {
-    ipdb *db = calloc(1, sizeof(ipdb));
+    ipdb *db = (ipdb *)calloc(1, sizeof(ipdb));
     db->handle = handle;
     db->buffer = buffer;
     db->length = length;

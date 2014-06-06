@@ -161,11 +161,11 @@ table_node* table_insert(table *t, const table_node* data)
     return node;
 }
 //
-table *table_create()
+table* table_create()
 {
-    table *t = calloc(1, sizeof(table));
+    table *t = (table *)calloc(1, sizeof(table));
     t->size = 1;
-    t->head = calloc(t->size, sizeof(table_node));
+    t->head = (table_node *)calloc(t->size, sizeof(table_node));
     t->idle = t->head + t->size;
     t->seed = (uint32_t)&t->head;
     t->str = buffer_create();
@@ -217,7 +217,7 @@ typedef struct
 
 table_value* make_table_value(table_node *node, uint32_t offset)
 {
-    table_value *node_value = calloc(1, sizeof(table_value));
+    table_value *node_value = (table_value *)calloc(1, sizeof(table_value));
     node_value->offset = offset;
     node_value->extend = table_create();
     node->value = (uint32_t)node_value;
@@ -261,7 +261,7 @@ bool qqwry_build(const ipdb *ctx, const char *file)
 
     table_value *zone_value;
     table_value *area_value;
-    
+
     uint32_t idx_first;
     uint32_t idx_last;
 

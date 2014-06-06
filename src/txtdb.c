@@ -60,7 +60,7 @@ bool is_legal_ip(const char *ip)
     return i==3;
 }
 
-bool split_line(char *buf, char **lower, char **upper, char **zone, char **area)
+bool split_line(char *buf, const char **lower, const char **upper, const char **zone, const char **area)
 {
     uint8_t state = 1;
     char *ptr = buf;
@@ -137,7 +137,7 @@ static bool txtdb_iter(const ipdb *db, ipdb_item *item, uint32_t index)
     if(index==0) last_offset = 0;
     while((offset = readline(db->buffer + last_offset, db->length - last_offset, buf)))
     {
-        char *lower, *upper, *zone, *area;
+        const char *lower, *upper, *zone, *area;
         last_offset += offset;
         if(split_line(buf, &lower, &upper, &zone, &area))
         {
@@ -159,7 +159,7 @@ static bool txtdb_init(ipdb * db)
 
     while((offset = readline(db->buffer + last_offset, db->length - last_offset, buf)))
     {
-        char *lower, *upper, *zone, *area;
+        const char *lower, *upper, *zone, *area;
         last_offset += offset;
         if(split_line(buf, &lower, &upper, &zone, &area)) db->count++;
     }
