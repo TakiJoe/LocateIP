@@ -207,7 +207,7 @@ static bool proxy_init(ipdb* db)
     ctx->extend = malloc(db->count * sizeof(ipdb_item));
     {
         int patch = ctx->header->size / sizeof(patch_item) - 1;
-        uint32_t i = ctx->header->count1 - 1;
+        int i = ctx->header->count1 - 1;
         int j = ctx->header->count2 - 1;
         ipdb_item item;
         ipdb_item *temp = (ipdb_item *)ctx->extend;
