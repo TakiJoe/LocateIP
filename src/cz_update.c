@@ -1,22 +1,22 @@
 #include "cz_update.h"
 
 /*
-±¾ÎÄ¼şÌá¹©¶Ô´¿ÕæIPÊı¾İ¿â×Ô¶¯¸üĞÂµÄ½âÎö
+æœ¬æ–‡ä»¶æä¾›å¯¹çº¯çœŸIPæ•°æ®åº“è‡ªåŠ¨æ›´æ–°çš„è§£æ
 
-http://update.cz88.net/ip/copywrite.rar  ÔªÊı¾İ£¬280×Ö½Ú
-http://update.cz88.net/ip/qqwry.rar      Êı¾İ¿â£¬zlibÑ¹Ëõ£¬ÆäÖĞÇ°0x200Êı¾İ±»¼ÓÃÜ
+http://update.cz88.net/ip/copywrite.rar  å…ƒæ•°æ®ï¼Œ280å­—èŠ‚
+http://update.cz88.net/ip/qqwry.rar      æ•°æ®åº“ï¼Œzlibå‹ç¼©ï¼Œå…¶ä¸­å‰0x200æ•°æ®è¢«åŠ å¯†
 */
 
 struct cz_update_t
 {
-    uint32_t sign;      /* "CZIP"ÎÄ¼şÍ· */
-    uint32_t version;   /* ÈÕÆÚ£¬ÓÃ×÷°æ±¾ºÅ */
-    uint32_t unknown1;  /* Î´ÖªÊı¾İ£¬ËÆºõÓÀÔ¶È¡Öµ0x01 */
-    uint32_t size;      /* qqwry.rar´óĞ¡ */
-    uint32_t unknown2;  /* Î´ÖªÊı¾İ */
-    uint32_t key;       /* ½âÃÜqqwry.rarÇ°0x200×Ö½ÚÃÜÔ¿ */
-    char text[128];     /* ÃèÊö */
-    char link[128];     /* ÍøÖ· */
+    uint32_t sign;      /* "CZIP"æ–‡ä»¶å¤´ */
+    uint32_t version;   /* æ—¥æœŸï¼Œç”¨ä½œç‰ˆæœ¬å· */
+    uint32_t unknown1;  /* æœªçŸ¥æ•°æ®ï¼Œä¼¼ä¹æ°¸è¿œå–å€¼0x01 */
+    uint32_t size;      /* qqwry.rarå¤§å° */
+    uint32_t unknown2;  /* æœªçŸ¥æ•°æ® */
+    uint32_t key;       /* è§£å¯†qqwry.rarå‰0x200å­—èŠ‚å¯†é’¥ */
+    char text[128];     /* æè¿° */
+    char link[128];     /* ç½‘å€ */
 };
 
 static uint32_t date_to_version(uint32_t year, uint32_t month, uint32_t day)

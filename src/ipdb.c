@@ -87,7 +87,7 @@ bool ipdb_dump(const ipdb *db, const char *file)
             fprintf(fp, "%-16s%-16s%s%s%s\r\n", ip1_t, ip2_t, item.zone, item.area[0]?" ":"", item.area);
         }
 
-        fprintf(fp, "\r\n\r\nIP数据库共有数据 ： %d 条\r\n", db->count); /* 为了和纯真解压一致 */
+        fprintf(fp, "\r\n\r\nIP数据库共有数据 ： %d 条\r\n", db->count); /* 为了和纯真解压一致，需要本文件编码为GB2312 */
         fclose(fp);
         return true;
     }

@@ -80,7 +80,7 @@ static bool qqwry_init(ipdb * db)
 
             if(qqwry_iter(db, &item, db->count-1))
             {
-                if( sscanf(item.area, "%d年%d月%d日", &year, &month, &day)!=3 ) /* 纯真IP数据库 */
+                if( sscanf(item.area, "%d年%d月%d日", &year, &month, &day)!=3 ) /* 纯真IP数据库，需要本文件编码为GB2312 */
                 {
                     if( sscanf(item.area, "%4d%2d%2d", &year, &month, &day)!=3 ) /* 珊瑚虫IP数据库 */
                     {

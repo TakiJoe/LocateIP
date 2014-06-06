@@ -3,8 +3,8 @@
 /*
 http://tool.17mon.cn/ipdb.html
 
-²éÑ¯¸üĞÂ http://api.17mon.cn/api.php?a=ipdb
-·µ»Ø×Ö·û´® 112.121.182.84|20140501|http://s.qdcdn.com/17mon/17monipdb.dat
+æŸ¥è¯¢æ›´æ–° http://api.17mon.cn/api.php?a=ipdb
+è¿”å›å­—ç¬¦ä¸² 112.121.182.84|20140501|http://s.qdcdn.com/17mon/17monipdb.dat
 */
 
 static uint32_t swap32(uint32_t n)
@@ -82,9 +82,9 @@ static bool mon17_init(ipdb* db)
 
         if(mon17_iter(db, &item, db->count-1))
         {
-            if( sscanf(item.area, "%4d%2d%2d", &year, &month, &day)!=3 ) /* 17monÊı¾İ¿â */
+            if( sscanf(item.area, "%4d%2d%2d", &year, &month, &day)!=3 ) /* 17monæ•°æ®åº“ */
             {
-                year = 1899, month = 12, day = 30; /* Î´ÖªÊı¾İ¿â */
+                year = 1899, month = 12, day = 30; /* æœªçŸ¥æ•°æ®åº“ */
             }
         }
         db->date = year*10000 + month*100 + day;
