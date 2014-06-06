@@ -161,15 +161,18 @@ table_node* table_insert(table *t, const table_node* data)
     return node;
 }
 //
-table* table_create()
+table* table_create(buffer *buf)
 {
     table *t = (table *)calloc(1, sizeof(table));
     t->size = 1;
     t->head = (table_node *)calloc(t->size, sizeof(table_node));
     t->idle = t->head + t->size;
     t->seed = (uint32_t)&t->head;
-    t->str = buffer_create();
-    buffer_append(t->str, &t->head, sizeof(uint32_t)); // hash seed
+    t->str = buf;
+    if(!buffer_size(t->str))
+    {
+        buffer_append(t->str, &t->seed, sizeof(t->seed));
+    }
     return t;
 }
 
@@ -189,7 +192,6 @@ table_node* table_get_key(table *t, const char* name)
 
 void table_release(table *t)
 {
-    buffer_release(t->str);
     free(t->head);
     free(t);
 }
@@ -215,11 +217,11 @@ typedef struct
     table*          extend;
 } table_value;
 
-table_value* make_table_value(table_node *node, uint32_t offset)
+table_value* make_table_value(buffer *buf, table_node *node, uint32_t offset)
 {
     table_value *node_value = (table_value *)calloc(1, sizeof(table_value));
     node_value->offset = offset;
-    node_value->extend = table_create();
+    node_value->extend = table_create(buf);
     node->value = (uint32_t)node_value;
     return node_value;
 }
@@ -243,7 +245,8 @@ bool qqwry_build(const ipdb *ctx, const char *file)
 {
     buffer *record_buffer = buffer_create();
     buffer *index_buffer = buffer_create();
-    table *string_table = table_create();
+    buffer *string_buffer = buffer_create();
+    table *string_table = table_create(string_buffer);
 
     uint32_t offset = 8;
 
@@ -288,7 +291,7 @@ bool qqwry_build(const ipdb *ctx, const char *file)
             else
             {
                 node = table_set_key(zone_value->extend, item.area);
-                make_table_value(node, offset);
+                make_table_value(string_buffer, node, offset);
 
                 redirect = 0x02;
                 buffer_append(record_buffer, &redirect, sizeof(redirect));
@@ -307,7 +310,7 @@ bool qqwry_build(const ipdb *ctx, const char *file)
                     if(!area)
                     {
                         area = table_set_key(string_table, item.area);
-                        make_table_value(area, offset + 4);
+                        make_table_value(string_buffer, area, offset + 4);
                     }
 
                     buffer_append(record_buffer, item.area, area_len);
@@ -317,13 +320,13 @@ bool qqwry_build(const ipdb *ctx, const char *file)
         else
         {
             zone = table_set_key(string_table, item.zone);
-            zone_value = make_table_value(zone, offset);
+            zone_value = make_table_value(string_buffer, zone, offset);
 
             zone_len = strlen(item.zone) + 1;
             buffer_append(record_buffer, item.zone, zone_len);
 
             node = table_set_key(zone_value->extend, item.area);
-            make_table_value(node, offset);
+            make_table_value(string_buffer, node, offset);
 
             area = table_get_key(string_table, item.area);
 
@@ -341,7 +344,7 @@ bool qqwry_build(const ipdb *ctx, const char *file)
                 if(!area)
                 {
                     area = table_set_key(string_table, item.area);
-                    make_table_value(area, offset + zone_len);
+                    make_table_value(string_buffer, area, offset + zone_len);
                 }
 
                 buffer_append(record_buffer, item.area, area_len);
@@ -373,12 +376,14 @@ bool qqwry_build(const ipdb *ctx, const char *file)
     release_table_value(string_table);
     buffer_release(index_buffer);
     buffer_release(record_buffer);
+    buffer_release(string_buffer);
     return true;
 }
 
 void test_table()
 {
-    table *test = table_create();
+    buffer *string_buffer = buffer_create();
+    table *test = table_create(string_buffer);
 
     table_set_key(test, "联通");
     table_set_key(test, "电信");
@@ -387,4 +392,5 @@ void test_table()
 
     show_table_key(test);
     table_release(test);
+    buffer_release(string_buffer);
 }
