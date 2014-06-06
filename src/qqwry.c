@@ -78,12 +78,14 @@ static bool qqwry_init(ipdb * db)
             db->count /= 7;
             db->count++;
 
-            qqwry_iter(db, &item, db->count-1);
-            if( sscanf(item.area, "%d年%d月%d日", &year, &month, &day)!=3 ) // 纯真IP数据库
+            if(qqwry_iter(db, &item, db->count-1))
             {
-                if( sscanf(item.area, "%4d%2d%2d", &year, &month, &day)!=3 ) // 珊瑚虫IP数据库
+                if( sscanf(item.area, "%d年%d月%d日", &year, &month, &day)!=3 ) // 纯真IP数据库
                 {
-                    year = 1899, month = 12, day = 30; // 未知数据库
+                    if( sscanf(item.area, "%4d%2d%2d", &year, &month, &day)!=3 ) // 珊瑚虫IP数据库
+                    {
+                        year = 1899, month = 12, day = 30; // 未知数据库
+                    }
                 }
             }
             db->date = year*10000 + month*100 + day;

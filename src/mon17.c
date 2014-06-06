@@ -75,13 +75,15 @@ static bool mon17_init(ipdb* db)
 
         ipdb_item item;
         uint32_t year = 0, month = 0, day = 0;
-        
+
         db->count = (index_length - 4 - 256*4 - 1024)/8;
 
-        mon17_iter(db, &item, db->count-1);
-        if( sscanf(item.area, "%4d%2d%2d", &year, &month, &day)!=3 ) // 17mon数据库
+        if(mon17_iter(db, &item, db->count-1))
         {
-            year = 1899, month = 12, day = 30; // 未知数据库
+            if( sscanf(item.area, "%4d%2d%2d", &year, &month, &day)!=3 ) // 17mon数据库
+            {
+                year = 1899, month = 12, day = 30; // 未知数据库
+            }
         }
         db->date = year*10000 + month*100 + day;
     }

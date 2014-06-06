@@ -63,8 +63,6 @@ void test_read_qqwry()
 
     if(db->count)
     {
-        //ipdb_dump(db, "qqwry.txt");
-
         ipdb_item item;
         if( ipdb_find(db, &item, "112.121.182.84") )
         {
@@ -75,6 +73,7 @@ void test_read_qqwry()
             char *ip2_t = ip2str(ip2, sizeof(ip2), item.upper);
             printf("%s %s %s %s\n", ip1_t, ip2_t, item.zone, item.area);
         }
+        ipdb_dump(db, "qqwry.txt");
     }
 
     if(buffer) free(buffer);
@@ -90,8 +89,6 @@ void test_read_mon17()
 
     if(db->count)
     {
-        //ipdb_dump(db, "17mon.txt");
-
         ipdb_item item;
         if( ipdb_find(db, &item, "112.121.182.84") )
         {
@@ -102,6 +99,7 @@ void test_read_mon17()
             char *ip2_t = ip2str(ip2, sizeof(ip2), item.upper);
             printf("%s %s %s %s\n", ip1_t, ip2_t, item.zone, item.area);
         }
+        ipdb_dump(db, "17mon.txt");
     }
 
     if(buffer) free(buffer);
@@ -117,8 +115,6 @@ void test_read_txt()
 
     if(db->count)
     {
-        ipdb_dump(db, "2.txt");
-
         ipdb_item item;
         if( ipdb_find(db, &item, "112.121.182.84") )
         {
@@ -129,6 +125,7 @@ void test_read_txt()
             char *ip2_t = ip2str(ip2, sizeof(ip2), item.upper);
             printf("%s %s %s %s\n", ip1_t, ip2_t, item.zone, item.area);
         }
+        ipdb_dump(db, "2.txt");
     }
 
     if(buffer) free(buffer);
@@ -138,10 +135,10 @@ void test_read_txt()
 void test_build_qqwry()
 {
     uint32_t length = 0;
-    uint8_t *buffer = readfile("qqwry_old.dat", &length);
+    uint8_t *buffer = readfile("qqwry.dat", &length);
     ipdb *db = ipdb_create(&qqwry_handle, buffer, length, NULL);
 
-    if(db->count) qqwry_build(db, "qqwry.dat");
+    if(db->count) qqwry_build(db, "qqwry new.dat");
 
     if(buffer) free(buffer);
     ipdb_release(db);
@@ -174,8 +171,15 @@ void test_apply_patch()
     ipdb *db1 = ipdb_create(&qqwry_handle, buffer1, length1, NULL);
     if(db1->count)
     {
-        bool x = apply_patch(db1, buffer2, length2, "qqwry patch.dat");
-        printf("apply_patch %d\n",x);
+        ipdb* db = apply_patch(db1, buffer2, length2);
+        if(db)
+		{
+			printf("apply_patch %d\n", db->date);
+			qqwry_build(db, "qqwry patch.dat");
+			ipdb_dump(db, "525 new.txt");
+			ipdb_release(db);
+		}
+
     }
 
     if(buffer1) free(buffer1);
@@ -213,7 +217,7 @@ int main()
     //test_build_qqwry();
     //test_build_patch();
     //test_apply_patch();
-    test_read_txt();
+    //test_read_txt();
     //test_cz_update();
     printf("calloc_times:%d free_times:%d %d\n",calloc_times,free_times,calloc_times-free_times);
     //getchar();

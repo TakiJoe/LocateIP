@@ -39,7 +39,7 @@ uint32_t readline(const uint8_t *buffer, uint32_t length, char *buf)
 bool is_legal_ip(const char *ip)
 {
     uint8_t i = 0;
-    uint16_t n = 0;
+    uint32_t n = 0;
     while(*ip)
     {
         if(*ip=='.')

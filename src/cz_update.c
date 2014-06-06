@@ -23,10 +23,12 @@ static void Version2Date(uint32_t version, uint32_t *year, uint32_t *month, uint
 }
 
 // 根据日期生成版本号
+/*
 static uint32_t ToVersion(uint32_t year, uint32_t month, uint32_t day)
 {
     return Date2Version(year, month, day) - Date2Version(1899, 12, 30);
 }
+*/
 
 // 根据版本号获取更新日期
 static uint32_t ToDate(uint32_t version)

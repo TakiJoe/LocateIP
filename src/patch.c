@@ -2,7 +2,7 @@
 #include "util.h"
 
 bool make_patch(const ipdb *, const ipdb *);
-bool apply_patch(const ipdb *, const uint8_t *, uint32_t, const char *);
+ipdb* apply_patch(const ipdb *, const uint8_t *, uint32_t);
 
 //
 typedef enum
@@ -208,7 +208,7 @@ static bool proxy_init(ipdb* db)
     ctx->extend = malloc(db->count * sizeof(ipdb_item));
     {
         int patch = ctx->header->size / sizeof(patch_item) - 1;
-        int i = ctx->header->count1 - 1;
+        uint32_t i = ctx->header->count1 - 1;
         int j = ctx->header->count2 - 1;
         ipdb_item item;
         ipdb_item *temp = (ipdb_item *)ctx->extend;
@@ -252,22 +252,18 @@ static bool proxy_quit(ipdb* db)
 }
 const ipdb_handle proxy_handle = {proxy_init, proxy_iter, NULL, proxy_quit};
 
-bool apply_patch(const ipdb *db, const uint8_t *buffer, uint32_t length, const char *file)
+ipdb* apply_patch(const ipdb *db, const uint8_t *buffer, uint32_t length)
 {
     patch_head *header = (patch_head*)buffer;
-    if(length<sizeof(patch_head)) return false;
-    if(header->magic!=PATCH_MAGIC) return false;
-    if(header->date1!=db->date) return false;
-    if(header->count1!=db->count) return false;
+    if(length<sizeof(patch_head)) return NULL;
+    if(header->magic!=PATCH_MAGIC) return NULL;
+    if(header->date1!=db->date) return NULL;
+    if(header->count1!=db->count) return NULL;
     if(header->crc32!=crc32_mem(0, (uint8_t*)header->item, length - sizeof(patch_head))) return false;
     {
         patch_proxy ctx = {db, header, header->item, (const char*)buffer + sizeof(patch_head) + header->size, 0};
 
-        ipdb *proxy = ipdb_create(&proxy_handle, NULL, 0, &ctx);
-        //qqwry_build(proxy, file);
-        //ipdb_dump(proxy, "525 new.txt");
-
-        ipdb_release(proxy);
+        return ipdb_create(&proxy_handle, NULL, 0, &ctx);
     }
-    return true;
+    return NULL;
 }
