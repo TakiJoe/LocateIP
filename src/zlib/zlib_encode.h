@@ -7,7 +7,6 @@
 #define assert(x)	((void)0)
 typedef unsigned int stbiw_uint32;
 
-// stretchy buffer; stbi__sbpush() == vector<>::push_back() -- stbi__sbcount() == vector<>::size()
 #define stbi__sbraw(a) ((int *) (a) - 2)
 #define stbi__sbm(a)   stbi__sbraw(a)[0]
 #define stbi__sbn(a)   stbi__sbraw(a)[1]
@@ -77,7 +76,7 @@ static unsigned int stbi__zhash(const unsigned char *data)
 #define stbi__zlib_add(code,codebits) \
       (bitbuf |= (code) << bitcount, bitcount += (codebits), stbi__zlib_flush())
 #define stbi__zlib_huffa(b,c)  stbi__zlib_add(stbi__zlib_bitrev(b,c),c)
-// default huffman tables
+
 #define stbi__zlib_huff1(n)  stbi__zlib_huffa(0x30 + (n), 8)
 #define stbi__zlib_huff2(n)  stbi__zlib_huffa(0x190 + (n)-144, 9)
 #define stbi__zlib_huff3(n)  stbi__zlib_huffa(0 + (n)-256,7)
@@ -96,31 +95,31 @@ unsigned char * stbi_zlib_compress(const unsigned char *data, int data_len, int 
    unsigned int bitbuf=0;
    int i,j, bitcount=0;
    unsigned char *out = NULL;
-   unsigned char **hash_table[stbi__ZHASH]; // 64KB on the stack!
+   unsigned char **hash_table[stbi__ZHASH]; 
    if (quality < 5) quality = 5;
 
-   stbi__sbpush(out, 0x78);   // DEFLATE 32K window
-   stbi__sbpush(out, 0x5e);   // FLEVEL = 1
-   stbi__zlib_add(1,1);  // BFINAL = 1
-   stbi__zlib_add(1,2);  // BTYPE = 1 -- fixed huffman
+   stbi__sbpush(out, 0x78);   
+   stbi__sbpush(out, 0x5e);   
+   stbi__zlib_add(1,1);  
+   stbi__zlib_add(1,2);  
 
    for (i=0; i < stbi__ZHASH; ++i)
       hash_table[i] = NULL;
 
    i=0;
    while (i < data_len-3) {
-      // hash next 3 bytes of data to be compressed
+      
       int h = stbi__zhash(data+i)&(stbi__ZHASH-1), best=3;
       unsigned char *bestloc = 0;
       unsigned char **hlist = hash_table[h];
       int n = stbi__sbcount(hlist);
       for (j=0; j < n; ++j) {
-         if (hlist[j]-data > i-32768) { // if entry lies within window
+         if (hlist[j]-data > i-32768) { 
             int d = stbi__zlib_countm(hlist[j], data+i, data_len-i);
             if (d >= best) best=d,bestloc=hlist[j];
          }
       }
-      // when hash table entry is too long, delete half the entries
+      
       if (hash_table[h] && stbi__sbn(hash_table[h]) == 2*quality) {
          memcpy(hash_table[h], hash_table[h]+quality, sizeof(hash_table[h][0])*quality);
          stbi__sbn(hash_table[h]) = quality;
@@ -128,14 +127,14 @@ unsigned char * stbi_zlib_compress(const unsigned char *data, int data_len, int 
       stbi__sbpush(hash_table[h],(unsigned char*)(data+i));
 
       if (bestloc) {
-         // "lazy matching" - check match at *next* byte, and if it's better, do cur byte as literal
+         
          h = stbi__zhash(data+i+1)&(stbi__ZHASH-1);
          hlist = hash_table[h];
          n = stbi__sbcount(hlist);
          for (j=0; j < n; ++j) {
             if (hlist[j]-data > i-32767) {
                int e = stbi__zlib_countm(hlist[j], data+i+1, data_len-i-1);
-               if (e > best) { // if next match is better, bail on current match
+               if (e > best) { 
                   bestloc = NULL;
                   break;
                }
@@ -144,7 +143,7 @@ unsigned char * stbi_zlib_compress(const unsigned char *data, int data_len, int 
       }
 
       if (bestloc) {
-         int d = data+i - bestloc; // distance back
+         int d = data+i - bestloc; 
          assert(d <= 32767 && best <= 258);
          for (j=0; best > lengthc[j+1]-1; ++j);
          stbi__zlib_huff(j+257);
@@ -158,11 +157,11 @@ unsigned char * stbi_zlib_compress(const unsigned char *data, int data_len, int 
          ++i;
       }
    }
-   // write out final bytes
+   
    for (;i < data_len; ++i)
       stbi__zlib_huffb(data[i]);
-   stbi__zlib_huff(256); // end of block
-   // pad with 0 bits to byte boundary
+   stbi__zlib_huff(256); 
+   
    while (bitcount)
       stbi__zlib_add(0,1);
 
@@ -170,7 +169,7 @@ unsigned char * stbi_zlib_compress(const unsigned char *data, int data_len, int 
       (void) stbi__sbfree(hash_table[i]);
 
    {
-      // compute adler32 on input
+      
       unsigned int i=0, s1=1, s2=0, blocklen = data_len % 5552;
       int j=0;
       while (j < data_len) {
@@ -185,9 +184,9 @@ unsigned char * stbi_zlib_compress(const unsigned char *data, int data_len, int 
       stbi__sbpush(out, (unsigned char) s1);
    }
    *out_len = stbi__sbn(out);
-   // make returned pointer freeable
+   
    memmove(stbi__sbraw(out), out, *out_len);
    return (unsigned char *) stbi__sbraw(out);
 }
 
-#endif // _ZLIB_ENCODE_H_
+#endif 

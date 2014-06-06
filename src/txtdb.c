@@ -54,7 +54,7 @@ bool is_legal_ip(const char *ip)
         }
         else
         {
-            //return false;
+            /* return false; */
         }
         ip++;
     }

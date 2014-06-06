@@ -1,9 +1,11 @@
 #include "ipdb.h"
 
-// http://tool.17mon.cn/ipdb.html
+/*
+http://tool.17mon.cn/ipdb.html
 
-// 查询更新 http://api.17mon.cn/api.php?a=ipdb
-// 返回字符串 112.121.182.84|20140501|http://s.qdcdn.com/17mon/17monipdb.dat
+查询更新 http://api.17mon.cn/api.php?a=ipdb
+返回字符串 112.121.182.84|20140501|http://s.qdcdn.com/17mon/17monipdb.dat
+*/
 
 static uint32_t swap32(uint32_t n)
 {
@@ -13,7 +15,7 @@ static uint32_t swap32(uint32_t n)
         return _byteswap_ulong(n);
     #else
         return ((n<<24)|((n<<8)&0x00FF0000)|((n>>8)&0x0000FF00)|(n>>24));
-    #endif // __GNUC__
+    #endif
 }
 
 typedef struct
@@ -80,9 +82,9 @@ static bool mon17_init(ipdb* db)
 
         if(mon17_iter(db, &item, db->count-1))
         {
-            if( sscanf(item.area, "%4d%2d%2d", &year, &month, &day)!=3 ) // 17mon数据库
+            if( sscanf(item.area, "%4d%2d%2d", &year, &month, &day)!=3 ) /* 17mon数据库 */
             {
-                year = 1899, month = 12, day = 30; // 未知数据库
+                year = 1899, month = 12, day = 30; /* 未知数据库 */
             }
         }
         db->date = year*10000 + month*100 + day;

@@ -25,19 +25,9 @@ typedef   signed int    int32;
 typedef unsigned int   uint;
 
 
-// public domain zlib decode    v0.2  Sean Barrett 2006-11-18
-//    simple implementation
-//      - all input must be provided in an upfront buffer
-//      - all output is written to a single output buffer (can malloc/realloc)
-//    performance
-//      - fast huffman
-
-// fast-way is faster to check than jpeg huffman, but slow way is slower
-#define ZFAST_BITS  9 // accelerate all cases in default tables
+#define ZFAST_BITS  9
 #define ZFAST_MASK  ((1 << ZFAST_BITS) - 1)
 
-// zlib-style huffman encoding
-// (jpegs packs from left, zlib from right, so can't share code)
 typedef struct
 {
    uint16 fast[1 << ZFAST_BITS];
@@ -45,7 +35,7 @@ typedef struct
    int maxcode[17];
    uint16 firstsymbol[16];
    uint8  size[288];
-   uint16 value[288]; 
+   uint16 value[288];
 } zhuffman;
 
 stbi_inline static int bitreverse16(int n)
@@ -60,8 +50,6 @@ stbi_inline static int bitreverse16(int n)
 stbi_inline static int bit_reverse(int v, int bits)
 {
    assert(bits <= 16);
-   // to bit reverse n bits, reverse 16 and shift
-   // e.g. 11 bits, bit reverse and shift away 5
    return bitreverse16(v) >> (16-bits);
 }
 
@@ -70,10 +58,9 @@ static int zbuild_huffman(zhuffman *z, uint8 *sizelist, int num)
    int i,k=0;
    int code, next_code[16], sizes[17];
 
-   // DEFLATE spec for generating codes
    memset(sizes, 0, sizeof(sizes));
    memset(z->fast, 255, sizeof(z->fast));
-   for (i=0; i < num; ++i) 
+   for (i=0; i < num; ++i)
       ++sizes[sizelist[i]];
    sizes[0] = 0;
    for (i=1; i < 16; ++i)
@@ -86,11 +73,11 @@ static int zbuild_huffman(zhuffman *z, uint8 *sizelist, int num)
       code = (code + sizes[i]);
       if (sizes[i])
          if (code-1 >= (1 << i)) return e("bad codelengths","Corrupt JPEG");
-      z->maxcode[i] = code << (16-i); // preshift for inner loop
+      z->maxcode[i] = code << (16-i);
       code <<= 1;
       k += sizes[i];
    }
-   z->maxcode[16] = 0x10000; // sentinel
+   z->maxcode[16] = 0x10000;
    for (i=0; i < num; ++i) {
       int s = sizelist[i];
       if (s) {
@@ -109,12 +96,6 @@ static int zbuild_huffman(zhuffman *z, uint8 *sizelist, int num)
    }
    return 1;
 }
-
-// zlib-from-memory implementation for PNG reading
-//    because PNG allows splitting the zlib stream arbitrarily,
-//    and it's annoying structurally to have PNG call ZLIB call PNG,
-//    we require PNG read all the IDATs and combine them into a single
-//    memory buffer
 
 typedef struct
 {
@@ -152,7 +133,7 @@ stbi_inline static unsigned int zreceive(zbuf *z, int n)
    k = z->code_buffer & ((1 << n) - 1);
    z->code_buffer >>= n;
    z->num_bits -= n;
-   return k;   
+   return k;
 }
 
 stbi_inline static int zhuffman_decode(zbuf *a, zhuffman *z)
@@ -167,14 +148,11 @@ stbi_inline static int zhuffman_decode(zbuf *a, zhuffman *z)
       return z->value[b];
    }
 
-   // not resolved by fast table, so compute it the slow way
-   // use jpeg approach, which requires MSbits at top
    k = bit_reverse(a->code_buffer, 16);
    for (s=ZFAST_BITS+1; ; ++s)
       if (k < z->maxcode[s])
          break;
-   if (s == 16) return -1; // invalid code!
-   // code size is s, so:
+   if (s == 16) return -1;
    b = (k >> (16-s)) - z->firstcode[s] + z->firstsymbol[s];
    assert(z->size[b] == s);
    a->code_buffer >>= s;
@@ -182,7 +160,7 @@ stbi_inline static int zhuffman_decode(zbuf *a, zhuffman *z)
    return z->value[b];
 }
 
-static int expand(zbuf *z, int n)  // need to make room for n bytes
+static int expand(zbuf *z, int n)
 {
    char *q;
    int cur, limit;
@@ -204,7 +182,7 @@ static int length_base[31] = {
    15,17,19,23,27,31,35,43,51,59,
    67,83,99,115,131,163,195,227,258,0,0 };
 
-static int length_extra[31]= 
+static int length_extra[31]=
 { 0,0,0,0,0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,0,0,0 };
 
 static int dist_base[32] = { 1,2,3,4,5,7,9,13,17,25,33,49,65,97,129,193,
@@ -218,7 +196,7 @@ static int parse_huffman_block(zbuf *a)
    for(;;) {
       int z = zhuffman_decode(a, &a->z_length);
       if (z < 256) {
-         if (z < 0) return e("bad huffman code","Corrupt PNG"); // error in huffman codes
+         if (z < 0) return e("bad huffman code","Corrupt PNG");
          if (a->zout >= a->zout_end) if (!expand(a, 1)) return 0;
          *a->zout++ = (char) z;
       } else {
@@ -245,7 +223,7 @@ static int compute_huffman_codes(zbuf *a)
 {
    static uint8 length_dezigzag[19] = { 16,17,18,0,8,7,9,6,10,5,11,4,12,3,13,2,14,1,15 };
    zhuffman z_codelength;
-   uint8 lencodes[286+32+137];//padding for maximum single op
+   uint8 lencodes[286+32+137];
    uint8 codelength_sizes[19];
    int i,n;
 
@@ -292,16 +270,14 @@ static int parse_uncompressed_block(zbuf *a)
    uint8 header[4];
    int len,nlen,k;
    if (a->num_bits & 7)
-      zreceive(a, a->num_bits & 7); // discard
-   // drain the bit-packed data into header
+      zreceive(a, a->num_bits & 7);
    k = 0;
    while (a->num_bits > 0) {
-      header[k++] = (uint8) (a->code_buffer & 255); // wtf this warns?
+      header[k++] = (uint8) (a->code_buffer & 255);
       a->code_buffer >>= 8;
       a->num_bits -= 8;
    }
    assert(a->num_bits == 0);
-   // now fill header the normal way
    while (k < 4)
       header[k++] = (uint8) zget8(a);
    len  = header[1] * 256 + header[0];
@@ -322,18 +298,16 @@ static int parse_zlib_header(zbuf *a)
    int cm    = cmf & 15;
    /* int cinfo = cmf >> 4; */
    int flg   = zget8(a);
-   if ((cmf*256+flg) % 31 != 0) return e("bad zlib header","Corrupt PNG"); // zlib spec
-   if (flg & 32) return e("no preset dict","Corrupt PNG"); // preset dictionary not allowed in png
-   if (cm != 8) return e("bad compression","Corrupt PNG"); // DEFLATE required for png
-   // window = 1 << (8 + cinfo)... but who cares, we fully buffer output
+   if ((cmf*256+flg) % 31 != 0) return e("bad zlib header","Corrupt PNG");
+   if (flg & 32) return e("no preset dict","Corrupt PNG");
+   if (cm != 8) return e("bad compression","Corrupt PNG");
    return 1;
 }
 
-// @TODO: should statically initialize these for optimal thread safety
 static uint8 default_length[288], default_distance[32];
 static void init_defaults(void)
 {
-   int i;   // use <= to match clearly with spec
+   int i;
    for (i=0; i <= 143; ++i)     default_length[i]   = 8;
    for (   ; i <= 255; ++i)     default_length[i]   = 9;
    for (   ; i <= 279; ++i)     default_length[i]   = 7;
@@ -358,7 +332,6 @@ static int parse_zlib(zbuf *a, int parse_header)
          return 0;
       } else {
          if (type == 1) {
-            // use fixed code lengths
             if (!default_distance[31]) init_defaults();
             if (!zbuild_huffman(&a->z_length  , default_length  , 288)) return 0;
             if (!zbuild_huffman(&a->z_distance, default_distance,  32)) return 0;
@@ -406,4 +379,4 @@ unsigned char *stbi_zlib_decode_malloc(const unsigned char *buffer, unsigned int
    return stbi_zlib_decode_malloc_guesssize(buffer, len, 0x4000, outlen);
 }
 
-#endif // _ZLIB_DECODE_H_
+#endif

@@ -4,7 +4,6 @@
 bool make_patch(const ipdb *, const ipdb *);
 ipdb* apply_patch(const ipdb *, const uint8_t *, uint32_t);
 
-//
 typedef enum
 {
     INSERT = 0,
@@ -34,7 +33,7 @@ typedef struct
     uint32_t            size;
     uint32_t            crc32;
     patch_item          item[0];
-    //string table
+/*  string              table[0] */
 } patch_head;
 
 typedef struct
@@ -225,7 +224,7 @@ static bool proxy_init(ipdb* db)
                 switch(ctx->item[patch].method)
                 {
                     case INSERT:
-                        i++;//don't use break
+                        i++;/* don't use break */
                     case MODIFY:
                         temp[j].lower = ctx->item[patch].lower;
                         temp[j].upper = ctx->item[patch].upper;

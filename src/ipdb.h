@@ -15,7 +15,7 @@ extern "C" {
     #define bool int
     #define true 1
     #define false 0
-#endif // __GNUC__
+#endif
 
 #ifndef uint32_t
 typedef unsigned char uint8_t;
@@ -25,50 +25,32 @@ typedef unsigned uint32_t;
 
 typedef struct ipdb_t ipdb;
 typedef struct ipdb_iter_t ipdb_iter;
-typedef struct ipdb_item_t ipdb_item;
 typedef struct ipdb_handle_t ipdb_handle;
-
-struct ipdb_t
+typedef struct
 {
-    const uint8_t*      buffer;
-    uint32_t            length;
-    uint32_t            count;
-    uint32_t            date;
-    const ipdb_handle*  handle;
-    void*               extend;
-};
+    uint32_t            lower;      /* IP段开始 */
+    uint32_t            upper;      /* IP段结束 */
+    const char*         zone;       /* 区域1 */
+    const char*         area;       /* 区域2 */
+} ipdb_item;
 
-struct ipdb_iter_t
-{
-    const ipdb*         db;
-    uint32_t            index;
-};
+/* 创建一个ip数据库解析引擎，失败返回NULL */
+ipdb* ipdb_create(const ipdb_handle *handle, const uint8_t *buffer, uint32_t length, void *extend);
 
-struct ipdb_item_t
-{
-    uint32_t            lower;
-    uint32_t            upper;
-    const char*         zone;
-    const char*         area;
-};
+/* 不再需要时需要释放 */
+void ipdb_release(ipdb *db);
 
-struct ipdb_handle_t
-{
-    bool                (*init)(ipdb *);
-    bool                (*iter)(const ipdb *, ipdb_item *, uint32_t);
-    bool                (*find)(const ipdb *, ipdb_item *, uint32_t);
-    bool                (*quit)(ipdb *);
-};
+/* 查找一个ip所对应的地址 */
+bool ipdb_find(const ipdb *db, ipdb_item *item, const char *ip);
 
-ipdb* ipdb_create(const ipdb_handle *, const uint8_t *, uint32_t, void *);
-void ipdb_release(ipdb *);
+/* 遍历一个ip数据库 */
+bool ipdb_next(ipdb_iter *iter, ipdb_item *item);
 
-bool ipdb_find(const ipdb *, ipdb_item *, const char *);
-bool ipdb_next(ipdb_iter *, ipdb_item *);
-bool ipdb_dump(const ipdb *, const char *);
+/* 导出全部内容 */
+bool ipdb_dump(const ipdb *db, const char *file);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // __LPDB_H_
+#endif
