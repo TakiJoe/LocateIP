@@ -261,5 +261,4 @@ ipdb* apply_patch(const ipdb *db, const uint8_t *buffer, uint32_t length)
 
         return ipdb_create(&proxy_handle, NULL, 0, &ctx);
     }
-    return NULL;
 }

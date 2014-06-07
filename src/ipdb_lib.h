@@ -2,9 +2,9 @@
 #include "util.h"
 #include "cz_update.h"
 
-const ipdb_handle qqwry_handle;
-const ipdb_handle mon17_handle;
-const ipdb_handle txtdb_handle;
+extern const ipdb_handle qqwry_handle;
+extern const ipdb_handle mon17_handle;
+extern const ipdb_handle txtdb_handle;
 
 bool qqwry_build(const ipdb *, const char *);
 

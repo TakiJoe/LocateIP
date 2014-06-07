@@ -1,33 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-int calloc_times = 0;
-int free_times = 0;
-static void* my_malloc(size_t len)
-{
-    calloc_times++;
-    return malloc(len);
-}
-static void* my_calloc(size_t n, size_t len)
-{
-    calloc_times++;
-    return calloc(n, len);
-}
-static void* my_realloc(void *ptr, size_t len)
-{
-    if(ptr==0) calloc_times++;
-    if(len==0) free_times++;
-    return realloc(ptr, len);
-}
-static void my_free(void *ptr)
-{
-    free_times++;
-    free(ptr);
-}
-#define malloc my_malloc
-#define calloc my_calloc
-#define realloc my_realloc
-#define free my_free
-
 #include "ipdb_lib.h"
 
 static uint8_t* readfile(const char *path, uint32_t *length)
@@ -224,7 +196,6 @@ static void test_cz_update()
 }
 int main()
 {
-    /*
     test_table();
     test_read_qqwry();
     test_read_mon17();
@@ -233,9 +204,5 @@ int main()
     test_apply_patch();
     test_read_txt();
     test_cz_update();
-    */
-    test_build_qqwry();
-    printf("calloc_times:%d free_times:%d %d\n",calloc_times,free_times,calloc_times-free_times);
-    /*getchar();*/
     return 0;
 }
