@@ -160,15 +160,13 @@ static bool txtdb_find(const ipdb *db, ipdb_item *item, uint32_t ip)
 
     uint32_t low = 0;
     uint32_t high = db->count;
-    while (1)
+    while ( low < high - 1 )
     {
-        if( low >= high - 1 )
-            break;
-
-        if( ip < record[(low + high)/2*2 + 1] )
-            high = (low + high)/2;
+        uint32_t mid = low + (high - low)/2;
+        if( ip < record[mid * 2 + 1] )
+            high = mid;
         else
-            low = (low + high)/2;
+            low = mid;
     }
     return txtdb_iter(db, item, low);
 }

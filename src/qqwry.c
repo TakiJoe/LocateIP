@@ -2,6 +2,8 @@
 
 /* http://www.cz88.net/ */
 
+#define INDEX_SIZE          7
+
 static uint32_t get_3b(const char *mem)
 {
     return 0x00ffffff & *(uint32_t*)(mem);
@@ -13,10 +15,10 @@ static bool qqwry_iter(const ipdb *db, ipdb_item *item, uint32_t index)
     {
         char *ptr = (char*)db->buffer;
         char *p = ptr + *(uint32_t*)ptr;
-        uint32_t temp = get_3b(p + 7 * index + 4);
+        uint32_t temp = get_3b(p + INDEX_SIZE * index + 4);
         char *offset = ptr + temp + 4;
 
-        item->lower = *(uint32_t*)(p + 7 * index);
+        item->lower = *(uint32_t*)(p + INDEX_SIZE * index);
         item->upper = *(uint32_t*)(ptr + temp);
 
         if( 0x01 == *offset )
@@ -49,15 +51,13 @@ static bool qqwry_find(const ipdb *db, ipdb_item *item, uint32_t ip)
 
     uint32_t low = 0;
     uint32_t high = db->count;
-    while (1)
+    while ( low < high - 1 )
     {
-        if( low >= high - 1 )
-            break;
-
-        if( ip < *(uint32_t*)(p + (low + high)/2 * 7) )
-            high = (low + high)/2;
+        uint32_t mid = low + (high - low)/2;
+        if( ip < *(uint32_t*)(p + mid * INDEX_SIZE) )
+            high = mid;
         else
-            low = (low + high)/2;
+            low = mid;
     }
     return qqwry_iter(db, item, low);
 }
@@ -70,12 +70,12 @@ static bool qqwry_init(ipdb * db)
         uint32_t idx_first = *pos;
         uint32_t idx_last = *(pos + 1);
         db->count = idx_last - idx_first;
-        if( (db->count % 7 == 0) && (db->length - idx_last == 7) )
+        if( (db->count % INDEX_SIZE == 0) && (db->length - idx_last == INDEX_SIZE) )
         {
             ipdb_item item;
             uint32_t year = 0, month = 0, day = 0;
 
-            db->count /= 7;
+            db->count /= INDEX_SIZE;
             db->count++;
 
             if(qqwry_iter(db, &item, db->count-1))
