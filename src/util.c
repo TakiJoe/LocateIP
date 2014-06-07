@@ -166,7 +166,7 @@ static table_node* node_position(table *t, const table_key* key)
 {
     return t->head + (key->hash & (t->size - 1));
 }
-static bool is_empty_node(const table_node* node)
+bool is_empty_node(const table_node* node)
 {
     return node->key == 0;
 }

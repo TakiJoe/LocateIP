@@ -1,9 +1,6 @@
 #include "ipdb.h"
 #include "util.h"
 
-bool make_patch(const ipdb *, const ipdb *);
-ipdb* apply_patch(const ipdb *, const uint8_t *, uint32_t);
-
 typedef enum
 {
     INSERT = 0,

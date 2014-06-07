@@ -1,9 +1,6 @@
 #include "ipdb.h"
 #include "util.h"
 
-bool qqwry_build(const ipdb *, const char *);
-
-
 typedef struct
 {
     uint32_t        offset;

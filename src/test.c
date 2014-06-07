@@ -28,14 +28,7 @@ static void my_free(void *ptr)
 #define realloc my_realloc
 #define free my_free
 
-#include "ipdb.c"
-#include "util.c"
-#include "qqwry.c"
-#include "mon17.c"
-#include "txtdb.c"
-#include "qqwry_build.c"
-#include "patch.c"
-#include "cz_update.c"
+#include "ipdb_lib.h"
 
 static uint8_t* readfile(const char *path, uint32_t *length)
 {

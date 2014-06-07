@@ -49,6 +49,8 @@ table_node* table_get_key(table *t, const char* name);
 void table_release(table *t);
 void show_table_key(table *t);
 
+bool is_empty_node(const table_node* node);
+
 #ifdef __cplusplus
 }
 #endif
