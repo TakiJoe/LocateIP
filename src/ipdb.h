@@ -25,14 +25,41 @@ typedef unsigned uint32_t;
 
 typedef struct ipdb_t ipdb;
 typedef struct ipdb_iter_t ipdb_iter;
+typedef struct ipdb_item_t ipdb_item;
 typedef struct ipdb_handle_t ipdb_handle;
-typedef struct
+
+
+struct ipdb_t
 {
-    uint32_t            lower;      /* IP段开始 */
-    uint32_t            upper;      /* IP段结束 */
-    const char*         zone;       /* 区域1 */
-    const char*         area;       /* 区域2 */
-} ipdb_item;
+	const uint8_t*      buffer;
+	uint32_t            length;
+	uint32_t            count;
+	uint32_t            date;
+	const ipdb_handle*  handle;
+	void*               extend;
+};
+
+struct ipdb_iter_t
+{
+	const ipdb*         db;
+	uint32_t            index;
+};
+
+struct ipdb_item_t
+{
+	uint32_t            lower;      /* IP段开始 */
+	uint32_t            upper;      /* IP段结束 */
+	const char*         zone;       /* 区域1 */
+	const char*         area;       /* 区域2 */
+};
+
+struct ipdb_handle_t
+{
+	bool(*init)(ipdb *);                                /* 引擎初始化函数，必须提供 */
+	bool(*iter)(const ipdb *, ipdb_item *, uint32_t);   /* 引擎遍历函数，可选 */
+	bool(*find)(const ipdb *, ipdb_item *, uint32_t);   /* 引擎定位函数，可选 */
+	bool(*quit)(ipdb *);                                /* 引擎释放函数，可选 */
+};
 
 /* 创建一个ip数据库解析引擎，失败返回NULL */
 ipdb* ipdb_create(const ipdb_handle *handle, const uint8_t *buffer, uint32_t length, void *extend);

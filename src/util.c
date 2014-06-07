@@ -124,22 +124,6 @@ uint32_t crc32_mem(uint32_t crc32, const uint8_t* buffer, uint32_t len)
 }
 
 
-struct table_t
-{
-    table_node*     head;
-    table_node*     idle;
-    uint32_t        size;
-    uint32_t        seed;
-    buffer*         str;
-};
-
-struct table_node_t
-{
-    uint32_t        key;
-    uint32_t        value;
-    table_node*     next;
-};
-
 typedef struct
 {
     uint32_t        hash;

@@ -27,6 +27,7 @@ static void my_free(void *ptr)
 #define calloc my_calloc
 #define realloc my_realloc
 #define free my_free
+
 #include "ipdb.c"
 #include "util.c"
 #include "qqwry.c"
@@ -150,10 +151,13 @@ static void test_build_qqwry()
     uint8_t *buffer = readfile("qqwry.dat", &length);
     ipdb *db = ipdb_create(&qqwry_handle, buffer, length, NULL);
 
-    if(db->count) qqwry_build(db, "qqwry new.dat");
+	if (db)
+	{
+		qqwry_build(db, "qqwry new.dat");
+		ipdb_release(db);
+	}
 
     if(buffer) free(buffer);
-    ipdb_release(db);
 
 }
 
@@ -227,6 +231,7 @@ static void test_cz_update()
 }
 int main()
 {
+    /*
     test_table();
     test_read_qqwry();
     test_read_mon17();
@@ -235,6 +240,8 @@ int main()
     test_apply_patch();
     test_read_txt();
     test_cz_update();
+    */
+    test_build_qqwry();
     printf("calloc_times:%d free_times:%d %d\n",calloc_times,free_times,calloc_times-free_times);
     /*getchar();*/
     return 0;
