@@ -244,6 +244,7 @@ static bool proxy_quit(ipdb* db)
 {
     patch_proxy *ctx = (patch_proxy *)db->extend;
     free(ctx->extend);
+    free(ctx);
     return true;
 }
 const ipdb_handle proxy_handle = {proxy_init, proxy_iter, NULL, proxy_quit};
@@ -257,8 +258,11 @@ ipdb* apply_patch(const ipdb *db, const uint8_t *buffer, uint32_t length)
     if(header->count1!=db->count) return NULL;
     if(header->crc32!=crc32_mem(0, (uint8_t*)header->item, length - sizeof(patch_head))) return NULL;
     {
-        patch_proxy ctx = {db, header, header->item, (const char*)buffer + sizeof(patch_head) + header->size, 0};
-
-        return ipdb_create(&proxy_handle, NULL, 0, &ctx);
+        patch_proxy *ctx = (patch_proxy *)calloc(1, sizeof(patch_proxy));
+        ctx->db = db;
+        ctx->header = header;
+        ctx->item = header->item;
+        ctx->string = (const char*)buffer + sizeof(patch_head) + header->size;
+        return ipdb_create(&proxy_handle, NULL, 0, ctx);
     }
 }
