@@ -9,13 +9,31 @@ http://tool.17mon.cn/ipdb.html
 
 static uint32_t swap32(uint32_t n)
 {
-    #ifdef __GNUC__
-        return __builtin_bswap32(n);
-    #elif defined _MSC_VER >= 1300
-        return _byteswap_ulong(n);
-    #else
-        return ((n<<24)|((n<<8)&0x00FF0000)|((n>>8)&0x0000FF00)|(n>>24));
-    #endif
+    return ((n<<24)|((n<<8)&0x00FF0000)|((n>>8)&0x0000FF00)|(n>>24));
+}
+
+typedef int (*compare_cb)(void *a, void *b);
+static int array_unique(void *array, int length, int size, compare_cb cmp)
+{
+    void *begin = array;
+    void *end = array + (length - 1) * size;
+
+    while(begin<end)
+    {
+        void *current = begin + size;
+        while(current<=end)
+        {
+            if(cmp(current, begin))
+            {
+                memmove(current, current + size, end - current);
+                end-=size;
+            }
+            else current+= size;
+        }
+        begin += size;
+    }
+
+    return (end - array + size)/size;
 }
 
 typedef struct
@@ -25,9 +43,15 @@ typedef struct
     uint32_t length:8;
 } mon17_item;
 
+
+typedef char* string;
+int is_equal(void *a, void *b)
+{
+    return strcmp(*(string*)a, *(string*)b)==0;
+}
+
 static bool mon17_iter(const ipdb *db, ipdb_item *item, uint32_t index)
 {
-    char *parting;
     static char buf[256];
     if(index<db->count)
     {
@@ -41,11 +65,28 @@ static bool mon17_iter(const ipdb *db, ipdb_item *item, uint32_t index)
         memcpy(buf, text, ptr[index].length);
         buf[ptr[index].length] = 0;
 
-        parting = strchr(buf, '\t');
-        *parting = 0;
+        string a = buf;
+        string b = strchr(a, '\t');
+        string c = strchr(b + 1, '\t');
+        string d = strchr(c + 1, '\t');
 
-        item->zone = buf;
-        item->area = parting + 1;
+        *b++ = 0;
+        *c++ = 0;
+        *d++ = 0;
+
+        string list[] = {a, b, c, d};
+        int count = array_unique(list, 4, sizeof(string), is_equal);
+        int i = 1;
+        for (; i < count; i++)
+        {
+            if(i==1)
+                strcpy(b, list[i]);
+            else
+                strcat(b, list[i]);
+        }
+
+        item->zone = a;
+        item->area = b;
         return true;
     }
     return false;
